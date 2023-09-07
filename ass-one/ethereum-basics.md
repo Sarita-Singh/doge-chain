@@ -282,3 +282,27 @@
     }
   }
   ```
+
+### 5. Find the number of peers connected currently to your Geth client (in Infura).
+
+- Answer: 100
+
+- JSON RPC payload:
+
+  ```json
+  {
+    "jsonrpc": "2.0",
+    "method": "net_peerCount",
+    "params": [],
+    "id": 1
+  }
+  ```
+
+- Response:
+  ```json
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": "0x64"
+  }
+  ```
