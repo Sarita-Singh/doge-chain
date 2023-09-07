@@ -235,3 +235,50 @@
     "result": "0xfd88edd195ca310"
   }
   ```
+
+### 4. Query the information about a transaction requested by transaction hash
+
+- Number of transactions made by the sender prior to this one in the block: 48970
+
+- Value transferred in Wei: 29901491478085619
+
+- JSON RPC payload:
+  ```json
+  {
+    "jsonrpc": "2.0",
+    "method": "eth_getTransactionByHash",
+    "params": [
+      "0xdcae4a84a5780f62f18a9afb07b3a7627b9a28aa128a76bfddec72de9a0c2606"
+    ],
+    "id": 1
+  }
+  ```
+- Response:
+  ```json
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "accessList": [],
+      "blockHash": "0x53d920959cf1ee6f569fcdeba03c9d91c54f4c34e893cd937536f7ae8c60be9a",
+      "blockNumber": "0x1132aea",
+      "chainId": "0x1",
+      "from": "0xbaf6dc2e647aeb6f510f9e318856a1bcd66c5e19",
+      "gas": "0x565f",
+      "gasPrice": "0x4cc13ee7c",
+      "hash": "0xdcae4a84a5780f62f18a9afb07b3a7627b9a28aa128a76bfddec72de9a0c2606",
+      "input": "0x",
+      "maxFeePerGas": "0x4cc13ee7c",
+      "maxPriorityFeePerGas": "0x0",
+      "nonce": "0xbf4a",
+      "r": "0x3c54f1d468465af6d4ad737ca626399a3b8180a510479585873531b5cfe0443e",
+      "s": "0x7dc4757678d30c50ce1932c9d0603274cfcb6719c64c0c1603834a43eadbf961",
+      "to": "0x388c818ca8b9251b393131c08a736a67ccb19297",
+      "transactionIndex": "0x73",
+      "type": "0x2",
+      "v": "0x0",
+      "value": "0x6a3b3f81ce3ff3",
+      "yParity": "0x0"
+    }
+  }
+  ```
