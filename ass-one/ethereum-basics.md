@@ -213,3 +213,15 @@
     }
   }
   ```
+
+### 3. Query the current latest block number (converted to decimal)
+
+- Answer: 1141819585802838800 
+- JSON RPC payload:
+  ```
+  {"jsonrpc":"2.0","method":"eth_getBalance","params":["0xBaF6dC2E647aeb6F510f9e318856A1BCd66C5e19","latest"],"id":1}
+  ```
+- Response: 
+  ```
+  {"jsonrpc":"2.0","id":1,"result":"0xfd88edd195ca310"}
+  ```
