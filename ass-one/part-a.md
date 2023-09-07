@@ -214,7 +214,7 @@
   }
   ```
 
-### 3. Query the current latest block number (converted to decimal)
+### 3. Find the balance (In Integer) of the account of a given address
 
 - Answer: 1141819585802838800
 
