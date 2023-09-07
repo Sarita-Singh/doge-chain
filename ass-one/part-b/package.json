@@ -1,0 +1,12 @@
+{
+  "name": "part-b",
+  "version": "1.0.0",
+  "description": "ass-smart-contract",
+  "main": "index.js",
+  "author": "chirag-ghosh",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "web3": "^4.1.1"
+  }
+}
