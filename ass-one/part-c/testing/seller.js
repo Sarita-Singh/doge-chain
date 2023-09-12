@@ -6,7 +6,7 @@ require("dotenv").config();
 
 const network = "sepolia";
 const privateKey = new Buffer.from(process.env.PRIVATE_KEY, "hex");
-const contractAddress = "0x17195a486B3c25CedFa8716CF1fb94aE64208Db9";
+const contractAddress = process.env.CONTRACT_ADDRESS;
 
 const provider = `https://${network}.infura.io/v3/${process.env.INFURA_API_KEY}`;
 const web3Provider = new Web3.providers.HttpProvider(provider);
@@ -43,7 +43,7 @@ const send = async (txMethod) => {
 
 const getBuyerAmountPaid = () => {
   myContract.methods
-    .getBuyerAmountPaid("0x328Ff6652cc4E79f69B165fC570e3A0F468fc903")
+    .getBuyerAmountPaid(process.env.BUYER_ADDRESS)
     .call()
     .then(function (output) {
       console.log(output);
@@ -56,7 +56,7 @@ const withdrawFunds = () => {
 };
 
 const refundTicket = () => {
-  const txMethod = myContract.methods.refundTicket("0x328Ff6652cc4E79f69B165fC570e3A0F468fc903");
+  const txMethod = myContract.methods.refundTicket(process.env.BUYER_ADDRESS);
   send(txMethod);
 };
 

@@ -6,7 +6,7 @@ require("dotenv").config();
 
 const network = "sepolia";
 const privateKey = new Buffer.from(process.env.PRIVATE_KEY, "hex");
-const contractAddress = "0x17195a486B3c25CedFa8716CF1fb94aE64208Db9";
+const contractAddress = process.env.CONTRACT_ADDRESS;
 
 const provider = `https://${network}.infura.io/v3/${process.env.INFURA_API_KEY}`;
 const web3Provider = new Web3.providers.HttpProvider(provider);
@@ -24,7 +24,7 @@ const send = async (txMethod, value) => {
       to: contractAddress,
       from: process.env.WALLET_ADDRESS,
       gasPrice: web3.utils.toHex(await web3.eth.getGasPrice()),
-      gasLimit: web3.utils.toHex(await txMethod.estimateGas()),
+      gasLimit: web3.utils.toHex(1000000),
       data: txMethod.encodeABI(),
       value: web3.utils.toHex(value),
     };
@@ -45,7 +45,7 @@ const send = async (txMethod, value) => {
 const buyTicket = () => {
   const numTickets = 2;
   const txMethod = myContract.methods.buyTicket("test@test.com", numTickets);
-  send(txMethod, numTickets * 10000);
+  send(txMethod, numTickets * 1000000000000);
 };
 
 module.exports = { buyTicket };

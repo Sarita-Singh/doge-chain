@@ -3,7 +3,7 @@ const abi = require("./abi.json");
 require("dotenv").config();
 
 const network = "sepolia";
-const contractAddress = "0x17195a486B3c25CedFa8716CF1fb94aE64208Db9";
+const contractAddress = process.env.CONTRACT_ADDRESS;
 
 const provider = `https://${network}.infura.io/v3/${process.env.INFURA_API_KEY}`;
 const web3Provider = new Web3.providers.HttpProvider(provider);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-// Contract Address: 0x17195a486B3c25CedFa8716CF1fb94aE64208Db9
+// Contract Address: 0x67dE01266bC186Bf8EF48209265d90676d0e73f9
 // Roll Numbers: 20CS10020, 20CS10053, 20CS10031, 20CS10058
 
 pragma solidity >=0.8.2 <0.9.0;
@@ -31,10 +31,7 @@ contract TicketBooking {
     }
 
     modifier onlyOwner() {
-        require(
-            msg.sender == seller,
-            "This function can only be run by the seller"
-        );
+        require(msg.sender == seller, "You are not the seller");
         _;
     }
 
@@ -44,7 +41,11 @@ contract TicketBooking {
     ) public payable soldOut {
         require(
             msg.value >= numTickets * price,
-            "Transaction value shoould not be less than total price of the tickets."
+            "Transaction value should not be less than total price of the tickets."
+        );
+        require(
+            numTickets <= quota - numTicketsSold,
+            "Requested number of tickets not available. Please try a smaller amount."
         );
 
         Buyer storage buyer = BuyersPaid[msg.sender];
@@ -57,6 +58,8 @@ contract TicketBooking {
             buyer.numTickets = numTickets;
             buyer.totalPrice = numTickets * price;
         }
+
+        numTicketsSold += numTickets;
 
         uint extra = msg.value - numTickets * price;
         if (extra > 0) {
