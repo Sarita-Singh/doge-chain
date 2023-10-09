@@ -32,14 +32,14 @@ class MyContract extends Contract {
       qty: itemNum,
       price: itemPrice,
     };
-    const compositeKey = ctx.stub.createCompositeKey("_implicit_org", [itemName]);
-    const collectionName = "_implicit_org_" + MSPID;
+    const compositeKey = ctx.stub.createCompositeKey("private_collection_", [itemName]);
+    const collectionName = MSPID + "PrivateCollection";
     await ctx.stub.putPrivateData(collectionName, compositeKey, Buffer.from(JSON.stringify(itemEntry)));
   }
 
   async GetItem(ctx, MSPID, itemName) {
-    const compositeKey = ctx.stub.createCompositeKey("_implicit_org", [itemName]);
-    const collectionName = "_implicit_org_" + MSPID;
+    const compositeKey = ctx.stub.createCompositeKey("private_collection_", [itemName]);
+    const collectionName = MSPID + "PrivateCollection";
 
     var itemBytes = await ctx.stub.getPrivateData(collectionName, compositeKey);
     if (!itemBytes || itemBytes.length == 0) throw new Error(`Inventory entry not found for ${itemName}`);
