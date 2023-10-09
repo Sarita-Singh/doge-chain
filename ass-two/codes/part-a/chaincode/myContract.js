@@ -27,23 +27,33 @@ class MyContract extends Contract {
     return JSON.stringify({ org, balance });
   }
   async AddItem(ctx, MSPID, itemName, itemNum, itemPrice) {
-    const itemEntry = {
-      name: itemName,
-      qty: itemNum,
-      price: itemPrice,
-    };
     const compositeKey = ctx.stub.createCompositeKey("private_collection_", [itemName]);
     const collectionName = MSPID + "PrivateCollection";
+    var itemBytes = await ctx.stub.getPrivateData(collectionName,compositeKey);
+    let quantity = 0;
+    if(itemBytes && itemBytes.length > 0){
+      const itemJSON = JSON.parse(itemBytes.toString());
+      quantity = parseInt(itemJSON.qty);
+    }
+    quantity += itemNum;
+    const itemEntry = {
+      name: itemName,
+      qty: quantity,
+      price: itemPrice,
+    };
+    
     await ctx.stub.putPrivateData(collectionName, compositeKey, Buffer.from(JSON.stringify(itemEntry)));
   }
 
-  async GetItem(ctx, MSPID, itemName) {
-    const compositeKey = ctx.stub.createCompositeKey("private_collection_", [itemName]);
+  async GetItem(ctx, MSPID) {
+    
     const collectionName = MSPID + "PrivateCollection";
-
-    var itemBytes = await ctx.stub.getPrivateData(collectionName, compositeKey);
-    if (!itemBytes || itemBytes.length == 0) throw new Error(`Inventory entry not found for ${itemName}`);
-    return itemBytes.toString();
+    var iterator = await ctx.stub.getPrivateDataByRange(collectionName,'','');
+    const inventory = [];
+    for await (const queryResult of iterator){
+      inventory.push(queryResult.value.toString('utf8'));
+    }
+    return JSON.stringify(inventory);
   }
 }
 

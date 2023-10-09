@@ -8,7 +8,7 @@ const ADMIN_ENROLLMENT_SECRET = "password";
 const CLIENT_ENROLLMENT_ID = "client";
 const CHANNEL = "doge-chain";
 const CONTRACT = "testing-js-3";
-
+const mspOrg = "Org1MSP";
 async function main() {
   try {
     // Org1 connection profile
@@ -35,7 +35,7 @@ async function main() {
           certificate: enrollment.certificate,
           privateKey: enrollment.key.toBytes(),
         },
-        mspId: "Org1MSP",
+        mspId: mspOrg,
         type: "X.509",
       };
 
@@ -59,7 +59,7 @@ async function main() {
 
       const x509Identity = {
         credentials: { certificate: enrollment.certificate, privateKey: enrollment.key.toBytes() },
-        mspId: "Org1MSP",
+        mspId: mspOrg,
         type: "X.509",
       };
 
@@ -87,21 +87,19 @@ async function main() {
     const command = args[0];
 
     if (command === "ADD_MONEY") {
-      const organization = args[1];
-      const amount = args[2];
-      await contract.submitTransaction("AddBalance", organization, amount);
+      const amount = args[1];
+      await contract.submitTransaction("AddBalance", mspOrg, amount);
     } else if (command === "ADD_ITEM") {
       const itemName = args[1];
       const itemCount = args[2];
       const itemPrice = args[3];
-      await contract.submitTransaction("AddItem", itemName, itemCount, itemPrice);
+      await contract.submitTransaction("AddItem", mspOrg, itemName, itemCount, itemPrice);
     } else if (command === "QUERY_BALANCE") {
       const organization = args[1];
       const result = await contract.evaluateTransaction("GetBalance", organization);
       console.log(result.toString());
     } else if (command === "GET_ITEM") {
-      const itemName = args[1];
-      const result = await contract.evaluateTransaction("GetItem", itemName);
+      const result = await contract.evaluateTransaction("GetItem", mspOrg);
       console.log(result.toString());
     }
 
