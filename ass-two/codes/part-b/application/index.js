@@ -8,6 +8,7 @@ const ADMIN_ENROLLMENT_SECRET = "adminpw";
 const CLIENT_ENROLLMENT_ID = "client";
 const CHANNEL = "doge-chain";
 const CONTRACT = "testing-js";
+const MSP = "Org1MSP";
 
 async function main() {
   try {
@@ -93,16 +94,14 @@ async function main() {
       const itemName = args[1];
       const itemCount = args[2];
       const itemPrice = args[3];
-      const organization = args[4];
-      await contract.submitTransaction("AddItem", organization, itemName, itemCount, itemPrice);
+      await contract.submitTransaction("AddItem", MSP, itemName, itemCount, itemPrice);
     } else if (command === "QUERY_BALANCE") {
       const organization = args[1];
       const result = await contract.evaluateTransaction("GetBalance", organization);
       console.log(result.toString());
     } else if (command === "GET_ITEM") {
       const itemName = args[1];
-      const organization = args[2];
-      const result = await contract.evaluateTransaction("GetItem", organization, itemName);
+      const result = await contract.evaluateTransaction("GetItem", MSP, itemName);
       console.log(result.toString());
     }
 
