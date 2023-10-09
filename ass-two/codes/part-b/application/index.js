@@ -4,10 +4,10 @@ const fs = require("fs");
 const path = require("path");
 
 const ADMIN_ENROLLMENT_ID = "admin";
-const ADMIN_ENROLLMENT_SECRET = "password";
+const ADMIN_ENROLLMENT_SECRET = "adminpw";
 const CLIENT_ENROLLMENT_ID = "client";
 const CHANNEL = "doge-chain";
-const CONTRACT = "testing-js-3";
+const CONTRACT = "testing-js";
 
 async function main() {
   try {
@@ -38,7 +38,6 @@ async function main() {
         mspId: "Org1MSP",
         type: "X.509",
       };
-
       await wallet.put(ADMIN_ENROLLMENT_ID, x509Identity);
       console.log("Admin enrolled and saved into wallet successfully");
 
@@ -94,14 +93,16 @@ async function main() {
       const itemName = args[1];
       const itemCount = args[2];
       const itemPrice = args[3];
-      await contract.submitTransaction("AddItem", itemName, itemCount, itemPrice);
+      const organization = args[4];
+      await contract.submitTransaction("AddItem", organization, itemName, itemCount, itemPrice);
     } else if (command === "QUERY_BALANCE") {
       const organization = args[1];
       const result = await contract.evaluateTransaction("GetBalance", organization);
       console.log(result.toString());
     } else if (command === "GET_ITEM") {
       const itemName = args[1];
-      const result = await contract.evaluateTransaction("GetItem", itemName);
+      const organization = args[2];
+      const result = await contract.evaluateTransaction("GetItem", organization, itemName);
       console.log(result.toString());
     }
 
