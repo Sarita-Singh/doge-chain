@@ -1,0 +1,23 @@
+{
+  "name": "blockchain_assignment2",
+  "version": "1.0.0",
+  "description": "\"Chaincode for Assignment2, Part A\"",
+  "main": "index.js",
+  "engines": {
+    "node": ">=8.4.0",
+    "npm": ">=5.3.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "nyc mocha --recursive",
+    "start": "fabric-chaincode-node start"
+  },
+  "engineStrict": true,
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fabric-contract-api": "^2.0.0",
+    "fabric-shim": "^2.0.0"
+  }
+}

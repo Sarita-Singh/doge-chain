@@ -1,0 +1,16 @@
+{
+  "name": "application",
+  "version": "1.0.0",
+  "description": "\"Client application for org1\"",
+  "engines": {
+    "node": ">=12",
+    "npm": ">=5"
+  },
+  "engineStrict": true,
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fabric-ca-client": "^2.2.4",
+    "fabric-network": "^2.2.4"
+  }
+}
