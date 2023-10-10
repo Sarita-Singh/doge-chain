@@ -93,7 +93,7 @@ async function main() {
       const itemName = args[1];
       const itemCount = args[2];
       const itemPrice = args[3];
-      var itemEntry = await contract.submitTransaction("QueryItem", itemName);
+      var itemEntry = await contract.evaluateTransaction("QueryItem", itemName);
       var itemDetails = JSON.parse(itemEntry.toString());
       let quantity = (parseInt(itemCount) + parseInt(itemDetails.qty)).toString();
       await contract.submitTransaction("AddItem", itemName, quantity, itemPrice);
