@@ -88,15 +88,30 @@ async function main() {
 
     if (command === "ADD_MONEY") {
       const amount = args[1];
-      await contract.submitTransaction("AddBalance", amount);
+      let balanceData = {balance: amount};
+      let statefulTxn = contract.createTransaction('AddBalance');
+      let tmapData = Buffer.from(JSON.stringify(balanceData));
+      statefulTxn.setTransient({
+        balance_amount: tmapData
+      });
+      await statefulTxn.submit();
     } else if (command === "ADD_ITEM") {
       const itemName = args[1];
       const itemCount = args[2];
       const itemPrice = args[3];
-      var itemEntry = await contract.submitTransaction("QueryItem", itemName);
-      var itemDetails = JSON.parse(itemEntry.toString());
-      let quantity = (parseInt(itemCount) + parseInt(itemDetails.qty)).toString();
-      await contract.submitTransaction("AddItem", itemName, quantity, itemPrice);
+      let itemEntry = {
+        name: itemName,
+        qty: itemCount,
+        price: itemPrice,
+      };
+      let tmapData = Buffer.from(JSON.stringify(itemEntry));
+      let statefulTxn = contract.createTransaction('AddItem');
+      statefulTxn.setTransient({
+        item_entry: tmapData
+      });
+      await statefulTxn.submit();
+
+      
     } else if (command === "QUERY_BALANCE") {
       const organization = args[1];
       const result = await contract.evaluateTransaction("GetBalance", organization);

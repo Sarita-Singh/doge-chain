@@ -6,14 +6,25 @@ class MyContract extends Contract {
   constructor() {
     super("MyContract");
   }
-  async AddBalance(ctx, amount) {
+  async AddBalance(ctx) {
+    const transientMap = ctx.stub.getTransient();
+    const transientBalanceJSON = transientMap.get('balance_amount');
+
+    if (transientBalanceJSON.length === 0) {
+        throw new Error('balance amount not found in the transient map');
+    }
+    const jsonBytesToString = String.fromCharCode(...transientBalanceJSON);
+    const jsonFromString = JSON.parse(jsonBytesToString);
+    if(jsonFromString.balance.length == 0){
+      throw new Error('balance field must be a non-empty string');
+    }
     const clientOrg = ctx.clientIdentity.getMSPID();
     var balanceBytes = await ctx.stub.getState(clientOrg);
     let balance = 0;
     if (balanceBytes && balanceBytes.length > 0) {
       balance = parseInt(balanceBytes.toString());
     }
-    balance += parseInt(amount);
+    balance += parseInt(jsonFromString.balance);
     await ctx.stub.putState(clientOrg, Buffer.from(balance.toString()));
   }
   async GetBalance(ctx, org) {
@@ -27,15 +38,33 @@ class MyContract extends Contract {
 
     return JSON.stringify({ org, balance });
   }
-  async AddItem(ctx, itemName, itemNum, itemPrice) {
+  async AddItem(ctx) {
+    const transientMap = ctx.stub.getTransient();
+    const transientItemJSON = transientMap.get('item_entry');
+    if (transientItemJSON.length === 0) {
+      throw new Error('balance amount not found in the transient map');
+  }
+  const jsonBytesToString = String.fromCharCode(...transientItemJSON);
+  const jsonFromString = JSON.parse(jsonBytesToString);
+  if(jsonFromString.name.length == 0){
+    throw new Error('name field must be a non-empty string');
+  }
+  if(jsonFromString.qty.length == 0){
+    throw new Error('qty field must be a non-empty string');
+  }
+  if(jsonFromString.price.length == 0){
+    throw new Error('price field must be a non-empty string');
+  }
+    const itemName = jsonFromString.name;
     const clientOrg = ctx.clientIdentity.getMSPID();
     const compositeKey = ctx.stub.createCompositeKey("private_collection_", [itemName]);
     const collectionName = clientOrg + "PrivateCollection";
-    const itemEntry = {
-      name: itemName,
-      qty: itemNum,
-      price: itemPrice,
-    };
+    var itemBytes = await ctx.stub.getPrivateData(collectionName, compositeKey);
+    let itemEntry = jsonFromString;
+    if(itemBytes && itemBytes.length > 0){
+      const itemBytesJSON = JSON.parse(itemBytes.toString());
+      itemEntry.qty = (parseInt(itemBytesJSON.qty) + parseInt(itemEntry.qty)).toString();
+    }
     
     await ctx.stub.putPrivateData(collectionName, compositeKey, Buffer.from(JSON.stringify(itemEntry)));
   }
