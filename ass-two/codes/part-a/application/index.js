@@ -4,10 +4,10 @@ const fs = require("fs");
 const path = require("path");
 
 const ADMIN_ENROLLMENT_ID = "admin";
-const ADMIN_ENROLLMENT_SECRET = "password";
+const ADMIN_ENROLLMENT_SECRET = "adminpw";
 const CLIENT_ENROLLMENT_ID = "client";
-const CHANNEL = "doge-chain";
-const CONTRACT = "testing-js-3";
+const CHANNEL = "mychannel";
+const CONTRACT = "shra";
 const mspOrg = "Org1MSP";
 async function main() {
   try {
@@ -88,18 +88,21 @@ async function main() {
 
     if (command === "ADD_MONEY") {
       const amount = args[1];
-      await contract.submitTransaction("AddBalance", mspOrg, amount);
+      await contract.submitTransaction("AddBalance", amount);
     } else if (command === "ADD_ITEM") {
       const itemName = args[1];
       const itemCount = args[2];
       const itemPrice = args[3];
-      await contract.submitTransaction("AddItem", mspOrg, itemName, itemCount, itemPrice);
+      var itemEntry = await contract.submitTransaction("QueryItem", itemName);
+      var itemDetails = JSON.parse(itemEntry.toString());
+      let quantity = (parseInt(itemCount) + parseInt(itemDetails.qty)).toString();
+      await contract.submitTransaction("AddItem", itemName, quantity, itemPrice);
     } else if (command === "QUERY_BALANCE") {
       const organization = args[1];
       const result = await contract.evaluateTransaction("GetBalance", organization);
       console.log(result.toString());
     } else if (command === "GET_ITEM") {
-      const result = await contract.evaluateTransaction("GetItem", mspOrg);
+      const result = await contract.evaluateTransaction("GetItem");
       console.log(result.toString());
     }
 

@@ -6,14 +6,15 @@ class MyContract extends Contract {
   constructor() {
     super("MyContract");
   }
-  async AddBalance(ctx, org, amount) {
-    var balanceBytes = await ctx.stub.getState(org);
+  async AddBalance(ctx, amount) {
+    const clientOrg = ctx.clientIdentity.getMSPID();
+    var balanceBytes = await ctx.stub.getState(clientOrg);
     let balance = 0;
     if (balanceBytes && balanceBytes.length > 0) {
       balance = parseInt(balanceBytes.toString());
     }
     balance += parseInt(amount);
-    await ctx.stub.putState(org, Buffer.from(balance.toString()));
+    await ctx.stub.putState(clientOrg, Buffer.from(balance.toString()));
   }
   async GetBalance(ctx, org) {
     var balanceBytes = await ctx.stub.getState(org);
@@ -26,34 +27,46 @@ class MyContract extends Contract {
 
     return JSON.stringify({ org, balance });
   }
-  async AddItem(ctx, MSPID, itemName, itemNum, itemPrice) {
+  async AddItem(ctx, itemName, itemNum, itemPrice) {
+    const clientOrg = ctx.clientIdentity.getMSPID();
     const compositeKey = ctx.stub.createCompositeKey("private_collection_", [itemName]);
-    const collectionName = MSPID + "PrivateCollection";
-    var itemBytes = await ctx.stub.getPrivateData(collectionName,compositeKey);
-    let quantity = 0;
-    if(itemBytes && itemBytes.length > 0){
-      const itemJSON = JSON.parse(itemBytes.toString());
-      quantity = parseInt(itemJSON.qty);
-    }
-    quantity += itemNum;
+    const collectionName = clientOrg + "PrivateCollection";
     const itemEntry = {
       name: itemName,
-      qty: quantity,
+      qty: itemNum,
       price: itemPrice,
     };
     
     await ctx.stub.putPrivateData(collectionName, compositeKey, Buffer.from(JSON.stringify(itemEntry)));
   }
 
-  async GetItem(ctx, MSPID) {
-    
-    const collectionName = MSPID + "PrivateCollection";
-    var iterator = await ctx.stub.getPrivateDataByRange(collectionName,'','');
+  async GetItem(ctx) {
+    const clientOrg = ctx.clientIdentity.getMSPID();    
+    const collectionName = clientOrg + "PrivateCollection";
+    const partialKey = "private_collection_";
+    const attr = []
+    var iterator =  ctx.stub.getPrivateDataByPartialCompositeKey(collectionName,partialKey, attr);
     const inventory = [];
     for await (const queryResult of iterator){
       inventory.push(queryResult.value.toString('utf8'));
     }
     return JSON.stringify(inventory);
+  }
+
+  async QueryItem(ctx, itemName){
+    const clientOrg = ctx.clientIdentity.getMSPID();
+    const compositeKey = ctx.stub.createCompositeKey("private_collection_", [itemName]);
+    const collectionName = clientOrg + "PrivateCollection";
+    var itemBytes = await ctx.stub.getPrivateData(collectionName, compositeKey);
+    if(itemBytes && itemBytes.length > 0){
+      return itemBytes.toString();
+    }
+    const itemEntry = {
+      name: itemName,
+      qty: "0",
+      price: "0",
+    };
+    return JSON.stringify(itemEntry);
   }
 }
 
