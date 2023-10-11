@@ -7,7 +7,7 @@ const ADMIN_ENROLLMENT_ID = "admin";
 const ADMIN_ENROLLMENT_SECRET = "adminpw";
 const CLIENT_ENROLLMENT_ID = "client";
 const CHANNEL = "doge-chain";
-const CONTRACT = "testing-js-8";
+const CONTRACT = "testing-js-b-2";
 const MSP = "Org1MSP";
 
 async function main() {
@@ -87,23 +87,35 @@ async function main() {
       name: CONTRACT,
       collectionNames: ["Org1MSPPrivateCollection"],
     };
-    contract.addDiscoveryInterest(discoveryInterest);
+    // contract.addDiscoveryInterest(discoveryInterest);
 
     const args = process.argv.slice(2);
     const command = args[0];
 
     if (command === "ADD_MONEY") {
-      const organization = args[1];
-      const amount = args[2];
-      await contract.submitTransaction("AddBalance", amount);
+      const amount = args[1];
+      let balanceData = { balance: amount };
+      let statefulTxn = contract.createTransaction("AddBalance");
+      let tmapData = Buffer.from(JSON.stringify(balanceData));
+      statefulTxn.setTransient({
+        balance_amount: tmapData,
+      });
+      await statefulTxn.submit();
     } else if (command === "ADD_ITEM") {
       const itemName = args[1];
       const itemCount = args[2];
       const itemPrice = args[3];
-      var itemEntry = await contract.evaluateTransaction("QueryItem", itemName);
-      var itemDetails = JSON.parse(itemEntry.toString());
-      let quantity = (parseInt(itemCount) + parseInt(itemDetails.qty)).toString();
-      await contract.submitTransaction("AddItem", itemName, quantity, itemPrice);
+      let itemEntry = {
+        name: itemName,
+        qty: itemCount,
+        price: itemPrice,
+      };
+      let tmapData = Buffer.from(JSON.stringify(itemEntry));
+      let statefulTxn = contract.createTransaction("AddItem");
+      statefulTxn.setTransient({
+        item_entry: tmapData,
+      });
+      await statefulTxn.submit();
     } else if (command === "QUERY_BALANCE") {
       const organization = args[1];
       const result = await contract.evaluateTransaction("GetBalance", organization);
@@ -118,9 +130,21 @@ async function main() {
       const itemName = args[1];
       const itemPrice = args[2];
       const transaction = contract.createTransaction("AddToMarket");
+      let transactionData = { name: itemName, qty: itemPrice };
+      let tmapData = Buffer.from(JSON.stringify(transactionData));
+      transaction.setTransient({
+        item_entry: tmapData,
+      });
       // transaction.setEndorsingOrganizations(MSP);
-      const result = await transaction.submit(itemName, itemPrice);
-      console.log(result.toString());
+      // transaction.setEndorsingPeers([MSP]);
+      try {
+        const result = await transaction.submit();
+        console.log(result.toString());
+      } catch (err) {
+        console.log(err);
+        // const response = err.errors[0];
+        // console.log(response.endorsement.endorser.toString(), response.endorsement.signature.toString());
+      }
     }
 
     gateway.disconnect();
