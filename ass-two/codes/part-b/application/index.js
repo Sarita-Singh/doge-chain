@@ -7,7 +7,7 @@ const ADMIN_ENROLLMENT_ID = "admin";
 const ADMIN_ENROLLMENT_SECRET = "adminpw";
 const CLIENT_ENROLLMENT_ID = "client";
 const CHANNEL = "doge-chain";
-const CONTRACT = "testing-js-6";
+const CONTRACT = "testing-js-8";
 const MSP = "Org1MSP";
 
 async function main() {
@@ -83,6 +83,12 @@ async function main() {
     // select the contract
     const contract = network.getContract(CONTRACT);
 
+    const discoveryInterest = {
+      name: CONTRACT,
+      collectionNames: ["Org1MSPPrivateCollection"],
+    };
+    contract.addDiscoveryInterest(discoveryInterest);
+
     const args = process.argv.slice(2);
     const command = args[0];
 
@@ -104,6 +110,16 @@ async function main() {
       console.log(result.toString());
     } else if (command === "GET_ITEM") {
       const result = await contract.evaluateTransaction("GetItem");
+      console.log(result.toString());
+    } else if (command === "ALL_ITEMS") {
+      const result = await contract.evaluateTransaction("GetItemsInMarket");
+      console.log(result.toString());
+    } else if (command === "ENLIST_ITEM") {
+      const itemName = args[1];
+      const itemPrice = args[2];
+      const transaction = contract.createTransaction("AddToMarket");
+      // transaction.setEndorsingOrganizations(MSP);
+      const result = await transaction.submit(itemName, itemPrice);
       console.log(result.toString());
     }
 
