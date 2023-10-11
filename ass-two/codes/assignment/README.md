@@ -15,4 +15,4 @@ Network up: `./network.sh up -ca`
 
 Create Channel: `./network.sh createChannel -c doge-chain -ca`
 
-Deploy: `./network.sh deployCC -c doge-chain -ccn testing-js-1 -ccp ../../assignment/chaincode/ -ccl javascript -cccg ../../assignment/chaincode/collections_config.json -ccep "OR('Org1MSP.peer','Org2MSP.peer')"`
+Deploy: `./network.sh deployCC -c doge-chain -ccn testing-js-1 -ccp ../../../assignment/chaincode/ -ccl javascript -cccg ../../../assignment/chaincode/collections_config.json -ccep "OR('Org1MSP.peer','Org2MSP.peer')"`

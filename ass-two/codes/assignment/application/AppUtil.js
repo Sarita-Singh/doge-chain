@@ -20,6 +20,8 @@ exports.buildCCPOrg1 = () => {
     __dirname,
     "..",
     "..",
+    "fabric",
+    "fabric-samples",
     "test-network",
     "organizations",
     "peerOrganizations",
