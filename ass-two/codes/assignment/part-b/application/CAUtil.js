@@ -14,6 +14,8 @@ const RESET = "\x1b[0m";
 const adminUserId = "admin";
 const adminUserPasswd = "adminpw";
 
+const logging = process.env.DEBUG;
+
 /**
  *
  * @param {*} FabricCAServices
@@ -25,7 +27,7 @@ exports.buildCAClient = (FabricCAServices, ccp, caHostName) => {
   const caTLSCACerts = caInfo.tlsCACerts.pem;
   const caClient = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
 
-  console.log(`${GREEN}--> Built a CA Client named ${caInfo.caName}${RESET}`);
+  if (logging) console.log(`${GREEN}--> Built a CA Client named ${caInfo.caName}${RESET}`);
   return caClient;
 };
 
@@ -34,7 +36,7 @@ exports.enrollAdmin = async (caClient, wallet, orgMspId) => {
     // Check to see if we've already enrolled the admin user.
     const identity = await wallet.get(adminUserId);
     if (identity) {
-      console.log(`${GREEN}--> An identity for the admin user already exists in the wallet${RESET}`);
+      if (logging) console.log(`${GREEN}--> An identity for the admin user already exists in the wallet${RESET}`);
       return;
     }
 
@@ -49,7 +51,7 @@ exports.enrollAdmin = async (caClient, wallet, orgMspId) => {
       type: "X.509",
     };
     await wallet.put(adminUserId, x509Identity);
-    console.log(`${GREEN}--> Successfully enrolled admin user and imported it into the wallet${RESET}`);
+    if (logging) console.log(`${GREEN}--> Successfully enrolled admin user and imported it into the wallet${RESET}`);
   } catch (error) {
     console.error(`${RED}*** Failed to enroll admin user : ${error}${RESET}`);
   }
@@ -60,15 +62,15 @@ exports.registerAndEnrollUser = async (caClient, wallet, orgMspId, userId, affil
     // Check to see if we've already enrolled the user
     const userIdentity = await wallet.get(userId);
     if (userIdentity) {
-      console.log(`${GREEN}--> An identity for the user ${userId} already exists in the wallet${RESET}`);
+      if (logging) console.log(`${GREEN}--> An identity for the user ${userId} already exists in the wallet${RESET}`);
       return;
     }
 
     // Must use an admin to register a new user
     const adminIdentity = await wallet.get(adminUserId);
     if (!adminIdentity) {
-      console.log(`An identity for the admin user does not exist in the wallet`);
-      console.log(`${BLUE}--> Enroll the admin user before retrying${RESET}`);
+      if (logging) console.log(`An identity for the admin user does not exist in the wallet`);
+      if (logging) console.log(`${BLUE}--> Enroll the admin user before retrying${RESET}`);
       return;
     }
 
@@ -99,9 +101,10 @@ exports.registerAndEnrollUser = async (caClient, wallet, orgMspId, userId, affil
       type: "X.509",
     };
     await wallet.put(userId, x509Identity);
-    console.log(
-      `${GREEN}--> Successfully registered and enrolled user ${userId} and imported it into the wallet${RESET}`
-    );
+    if (logging)
+      console.log(
+        `${GREEN}--> Successfully registered and enrolled user ${userId} and imported it into the wallet${RESET}`
+      );
   } catch (error) {
     console.error(`${RED}*** Failed to register user : ${error}${RESET}`);
   }
