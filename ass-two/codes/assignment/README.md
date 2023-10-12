@@ -1,4 +1,4 @@
-Required Directory Structure
+# Required Directory Structure
 
 ```graphql
 .
@@ -19,7 +19,7 @@ Required Directory Structure
 
 <br/>
 
-Setting Environment Variables (run this inside `fabric-samples/test-network` directory)
+# Setting Environment Variables (run this inside `fabric-samples/test-network` directory)
 
 ```bash
 export PATH=${PWD}/../bin:$PATH
@@ -33,6 +33,8 @@ export CORE_PEER_ADDRESS=localhost:7051
 ```
 
 <br/>
+
+# Test-Network and Chaincode Deployment
 
 Network up
 
@@ -62,4 +64,59 @@ Deploy Part B
 
 ```bash
 ./network.sh deployCC -c doge-chain -ccn part-b -ccp ../../assignment/part-b/chaincode/ -ccl javascript -cccg ../../assignment/part-b/chaincode/collections_config.json -ccep "OR('Org1MSP.peer','Org2MSP.peer')"
+```
+
+<br/>
+
+# Running Application
+
+- part-a directory: `assignment/part-a/assignment`
+- part-b directory: `assignment/part-b/assignment`
+
+<br/>
+
+Installing Dependencies
+
+```bash
+yarn
+```
+
+OR
+
+```bash
+npm install
+```
+
+<br/>
+
+Generic run command
+
+```bash
+node index.js 1/2 <action-command> ...args
+```
+
+1 runs the application as client for Org1 and respectively for 2.
+
+<br/>
+
+Examples of some commands
+
+```bash
+node index.js 1 ADD_MONEY 50
+
+node index.js 1 QUERY_BALANCE Org1MSP
+
+node index.js 2 ADD_MONEY 2000
+
+node index.js 2 QUERY_BALANCE Org2MSP
+
+node index.js 1 QUERY_BALANCE Org2MSP
+
+node index.js 1 ADD_ITEM apple 3 60
+
+node index.js 2 ADD_ITEM maaza 1 20
+
+node index.js 1 GET_ITEM
+
+node index.js 2 GET_ITEM
 ```

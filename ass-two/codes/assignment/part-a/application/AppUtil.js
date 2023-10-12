@@ -14,6 +14,8 @@ const GREEN = "\x1b[32m";
 const BLUE = "\x1b[34m";
 const RESET = "\x1b[0m";
 
+const logging = process.env.DEBUG;
+
 exports.buildCCPOrg1 = () => {
   // load the common connection configuration file
   const ccpPath = path.resolve(
@@ -37,7 +39,7 @@ exports.buildCCPOrg1 = () => {
   // build a JSON object from the file contents
   const ccp = JSON.parse(contents);
 
-  console.log(`${GREEN}--> Loaded the network configuration located at ${ccpPath}${RESET}`);
+  if (logging) console.log(`${GREEN}--> Loaded the network configuration located at ${ccpPath}${RESET}`);
   return ccp;
 };
 
@@ -47,6 +49,8 @@ exports.buildCCPOrg2 = () => {
     __dirname,
     "..",
     "..",
+    "..",
+    "fabric-samples",
     "test-network",
     "organizations",
     "peerOrganizations",
@@ -62,7 +66,7 @@ exports.buildCCPOrg2 = () => {
   // build a JSON object from the file contents
   const ccp = JSON.parse(contents);
 
-  console.log(`${GREEN}--> Loaded the network configuration located at ${ccpPath}${RESET}`);
+  if (logging) console.log(`${GREEN}--> Loaded the network configuration located at ${ccpPath}${RESET}`);
   return ccp;
 };
 
@@ -71,10 +75,10 @@ exports.buildWallet = async (Wallets, walletPath) => {
   let wallet;
   if (walletPath) {
     wallet = await Wallets.newFileSystemWallet(walletPath);
-    console.log(`${GREEN}--> Built a file system wallet at ${walletPath}${RESET}`);
+    if (logging) console.log(`${GREEN}--> Built a file system wallet at ${walletPath}${RESET}`);
   } else {
     wallet = await Wallets.newInMemoryWallet();
-    console.log(`${GREEN}--> Built an in memory wallet${RESET}`);
+    if (logging) console.log(`${GREEN}--> Built an in memory wallet${RESET}`);
   }
 
   return wallet;
