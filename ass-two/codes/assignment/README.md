@@ -19,7 +19,9 @@
 
 <br/>
 
-# Setting Environment Variables (run this inside `fabric-samples/test-network` directory)
+# Setting Environment Variables
+
+Run this inside `fabric-samples/test-network` directory
 
 ```bash
 export PATH=${PWD}/../bin:$PATH
@@ -99,7 +101,7 @@ node index.js 1/2 <action-command> ...args
 
 <br/>
 
-Examples of some commands
+Examples of commands common to both parts
 
 ```bash
 node index.js 1 ADD_MONEY 50
@@ -119,6 +121,20 @@ node index.js 2 ADD_ITEM maaza 1 20
 node index.js 1 GET_ITEM
 
 node index.js 2 GET_ITEM
+```
+
+<br/>
+
+Examples of commands exculsively for part B
+
+```bash
+node index.js 1 ENLIST_ITEM apple 80
+
+node index.js 1 ENLIST_ITEM orange 70
+
+node index.js 1 ALL_ITEMS
+
+node index.js 2 BUY_ITEM orange (this command is meant for debug purposes)
 ```
 
 <br/>

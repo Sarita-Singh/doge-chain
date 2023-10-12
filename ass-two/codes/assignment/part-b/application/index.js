@@ -94,7 +94,7 @@ async function main() {
         });
         await statefulTxn.submit();
 
-        console.log(`${GREEN}\n--> Money added to global state.${RESET}`);
+        console.log(`${GREEN}\n--> Money added to global state for ${MSP}.${RESET}`);
       }
 
       // For running AddItem
@@ -128,8 +128,34 @@ async function main() {
       // For running GetItem
       else if (command === "GET_ITEM") {
         const result = await contract.evaluateTransaction("GetItem");
-        console.log(`${GREEN}\n--> Fetched all items.${RESET}`);
+        console.log(`${GREEN}\n--> Fetched all items of ${MSP}.${RESET}`);
         console.log(`${BLUE}Result: ${prettyJSONString(result.toString())}${RESET}`);
+      }
+
+      // For running GetItemsInMarket
+      else if (command === "ALL_ITEMS") {
+        const result = await contract.evaluateTransaction("GetItemsInMarket");
+        console.log(`${GREEN}\n--> Fetched all items from marketplace.${RESET}`);
+        console.log(`${BLUE}Result: ${prettyJSONString(result.toString())}${RESET}`);
+      }
+
+      // For running AddToMarket
+      else if (command === "ENLIST_ITEM") {
+        const itemName = args[2];
+        const itemPrice = args[3];
+        let statefulTxn = contract.createTransaction("AddToMarket");
+        statefulTxn.setEndorsingOrganizations(MSP);
+        await statefulTxn.submit(itemName, itemPrice);
+        console.log(`${GREEN}\n--> ${MSP} added ${itemName} to marketplace.${RESET}`);
+      }
+
+      // For running BuyFromMarket. Debugging function
+      else if (command === "BUY_ITEM") {
+        const itemName = args[2];
+        let statefulTxn = contract.createTransaction("BuyFromMarket");
+        statefulTxn.setEndorsingOrganizations(MSP);
+        await statefulTxn.submit(itemName);
+        console.log(`${GREEN}\n--> ${MSP} bought ${itemName} from marketplace.${RESET}`);
       }
     } finally {
       // The inevitable

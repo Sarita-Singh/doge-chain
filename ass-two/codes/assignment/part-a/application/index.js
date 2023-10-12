@@ -94,7 +94,7 @@ async function main() {
         });
         await statefulTxn.submit();
 
-        console.log(`${GREEN}\n--> Money added to global state.${RESET}`);
+        console.log(`${GREEN}\n--> Money added to global state for ${MSP}.${RESET}`);
       }
 
       // For running AddItem
@@ -128,7 +128,7 @@ async function main() {
       // For running GetItem
       else if (command === "GET_ITEM") {
         const result = await contract.evaluateTransaction("GetItem");
-        console.log(`${GREEN}\n--> Fetched all items.${RESET}`);
+        console.log(`${GREEN}\n--> Fetched all items of ${MSP}.${RESET}`);
         console.log(`${BLUE}Result: ${prettyJSONString(result.toString())}${RESET}`);
       }
     } finally {

@@ -106,6 +106,105 @@ class MyContract extends Contract {
     }
     return JSON.stringify(inventory);
   }
+
+  async AddToMarket(ctx, item, price) {
+    const clientOrg = ctx.clientIdentity.getMSPID();
+    const compositeKey = ctx.stub.createCompositeKey("private_collection_", [item]);
+    const collectionName = clientOrg + "PrivateCollection";
+    var itemBytes = await ctx.stub.getPrivateData(collectionName, compositeKey);
+
+    if (!itemBytes || itemBytes.length === 0) {
+      throw new Error(`Item '${item}' not found in the inventory.`);
+    }
+    const itemJSON = JSON.parse(itemBytes.toString());
+
+    var marketplace = [];
+    var marketplaceBytes = await ctx.stub.getState("marketplace");
+    if (marketplaceBytes && marketplaceBytes.length > 0) {
+      marketplace = JSON.parse(marketplaceBytes.toString());
+    }
+
+    marketplace.push({
+      name: item,
+      price: price,
+      qty: itemJSON.qty,
+      owner: clientOrg,
+    });
+
+    await ctx.stub.putState("marketplace", Buffer.from(JSON.stringify(marketplace)));
+
+    await ctx.stub.deletePrivateData(collectionName, compositeKey);
+  }
+
+  async GetItemsInMarket(ctx) {
+    var marketplaceBytes = await ctx.stub.getState("marketplace");
+    let marketplace = [];
+    if (marketplaceBytes && marketplaceBytes.length > 0) {
+      marketplace = JSON.parse(marketplaceBytes.toString());
+    } else {
+      throw new Error(`marketplace not found`);
+    }
+
+    return JSON.stringify(marketplace);
+  }
+
+  async BuyFromMarket(ctx, item) {
+    const clientOrg = ctx.clientIdentity.getMSPID();
+
+    const buyerBalanceString = await this.GetBalance(ctx, clientOrg);
+    var buyerBalance = JSON.parse(buyerBalanceString).balance;
+
+    const marketplaceString = await this.GetItemsInMarket(ctx);
+    const marketplace = JSON.parse(marketplaceString);
+
+    var canBuy = false;
+    var itemToBuy = null;
+
+    const newMarketplace = marketplace.filter((existingItem) => {
+      if (existingItem.name !== item || existingItem.owner === clientOrg) return true;
+      if (existingItem.price * existingItem.qty > buyerBalance) return true;
+      canBuy = true;
+      itemToBuy = existingItem;
+      return false;
+    });
+
+    if (canBuy) {
+      await ctx.stub.putState("marketplace", Buffer.from(JSON.stringify(newMarketplace)));
+
+      if (itemToBuy === null) {
+        throw new Error(`some error happened. item was found null`);
+      } else {
+        buyerBalance -= itemToBuy.price * itemToBuy.qty;
+        await ctx.stub.putState(clientOrg, Buffer.from(buyerBalance.toString()));
+
+        const sellerBalanceString = await this.GetBalance(ctx, itemToBuy.owner);
+        var sellerBalance = JSON.parse(sellerBalanceString).balance;
+        sellerBalance += itemToBuy.price * itemToBuy.qty;
+        await ctx.stub.putState(itemToBuy.owner, Buffer.from(sellerBalance.toString()));
+
+        const compositeKey = ctx.stub.createCompositeKey("private_collection_", [itemToBuy.name]);
+        const collectionName = clientOrg + "PrivateCollection";
+        var itemBytes = await ctx.stub.getPrivateData(collectionName, compositeKey);
+
+        let quantity = 0,
+          price = null;
+        if (itemBytes && itemBytes.length > 0) {
+          const itemJSON = JSON.parse(itemBytes.toString());
+          quantity = parseInt(itemJSON.qty);
+          price = parseInt(itemJSON.price);
+        }
+
+        quantity += itemToBuy.qty;
+        const itemEntry = {
+          name: itemToBuy.name,
+          qty: quantity,
+          price: price !== null ? price : itemToBuy.price,
+        };
+
+        await ctx.stub.putPrivateData(collectionName, compositeKey, Buffer.from(JSON.stringify(itemEntry)));
+      }
+    }
+  }
 }
 
 module.exports = MyContract;
