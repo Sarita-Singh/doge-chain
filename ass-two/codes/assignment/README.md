@@ -120,3 +120,17 @@ node index.js 1 GET_ITEM
 
 node index.js 2 GET_ITEM
 ```
+
+<br/>
+
+Verbose Logging On
+
+```bash
+export DEBUG=True
+```
+
+Verbose Logging Off
+
+```bash
+unset DEBUG
+```
