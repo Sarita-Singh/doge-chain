@@ -12,6 +12,7 @@ const path = require("path");
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require("./CAUtil.js");
 const { buildCCPOrg1, buildWallet, prettyJSONString, buildCCPOrg2 } = require("./AppUtil.js");
 const { exit } = require("process");
+const fs = require("fs");
 
 const RED = "\x1b[31m";
 const GREEN = "\x1b[32m";
@@ -20,7 +21,7 @@ const RESET = "\x1b[0m";
 
 const args = process.argv.slice(2);
 
-if (args.length < 2) exit(1);
+if (args.length < 1) exit(1);
 
 const channelName = "doge-chain";
 const chaincodeName = "part-b";
@@ -37,6 +38,7 @@ const userId = MSP === mspOrg1 ? org1UserId : org2UserId;
 const walletPath = path.join(__dirname, "wallet", MSP);
 const caHostName = MSP === mspOrg1 ? "ca.org1.example.com" : "ca.org2.example.com";
 const affiliation = MSP === mspOrg1 ? "org1.department1" : "org2.department1";
+const wishlistFile = MSP + "-wishlist.txt";
 
 async function main() {
   try {
@@ -156,6 +158,56 @@ async function main() {
         statefulTxn.setEndorsingOrganizations(MSP);
         await statefulTxn.submit(itemName);
         console.log(`${GREEN}\n--> ${MSP} bought ${itemName} from marketplace.${RESET}`);
+      }
+
+      // For adding to wishlist
+      else if (command === "WISHLIST") {
+        const itemName = args[2];
+
+        if (fs.existsSync(wishlistFile)) {
+          fs.appendFile(wishlistFile, `${itemName}\n`, (error) => {
+            if (error) console.log(`${RED}******** FAILED to append to wishlist file: ${error}${RESET}`);
+            else console.log(`${GREEN}\n--> Added ${itemName} to wishlist of ${MSP}.${RESET}`);
+          });
+        } else {
+          fs.writeFile(wishlistFile, `${itemName}\n`, (error) => {
+            if (error) console.log(`${RED}******** FAILED to write to wishlist file: ${error}${RESET}`);
+            else console.log(`${GREEN}\n--> Added ${itemName} to wishlist of ${MSP}.${RESET}`);
+          });
+        }
+      }
+
+      // Wait for new item to be added
+      else {
+        const listener = async (event) => {
+          console.log(
+            `${BLUE}--> Contract Event Received: ${event.eventName} - ${prettyJSONString(event.payload.toString())}`
+          );
+          if (event.eventName === "AddItemToMarketplace") {
+            const addedItem = JSON.parse(event.payload.toString());
+
+            if (fs.existsSync(wishlistFile)) {
+              fs.readFile(wishlistFile, async (error, data) => {
+                if (error) console.log(`${RED}******** FAILED to read wishlist file: ${error}${RESET}`);
+                else {
+                  const lines = data.toString().split("\n");
+                  if (lines.includes(addedItem.name)) {
+                    console.log(`${GREEN}\n--> Item "${addedItem.name}" in wishlist of ${MSP}. Trying to buy.${RESET}`);
+
+                    let statefulTxn = contract.createTransaction("BuyFromMarket");
+                    statefulTxn.setEndorsingOrganizations(MSP);
+                    await statefulTxn.submit(addedItem.name);
+                    console.log(`${GREEN}\n--> ${MSP} bought ${addedItem.name} from marketplace.${RESET}`);
+                  }
+                }
+              });
+            } else {
+              if (error) console.log(`${RED}******** No wishlist file found. No action taken.${RESET}`);
+            }
+          }
+        };
+
+        await contract.addContractListener(listener);
       }
     } finally {
       // The inevitable

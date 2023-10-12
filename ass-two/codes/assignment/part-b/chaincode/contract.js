@@ -131,7 +131,10 @@ class MyContract extends Contract {
       owner: clientOrg,
     });
 
-    await ctx.stub.putState("marketplace", Buffer.from(JSON.stringify(marketplace)));
+    const buffer = Buffer.from(JSON.stringify(marketplace));
+
+    await ctx.stub.putState("marketplace", buffer);
+    ctx.stub.setEvent("AddItemToMarketplace", buffer);
 
     await ctx.stub.deletePrivateData(collectionName, compositeKey);
   }
