@@ -1,5 +1,5 @@
 "use strict";
 
-const myContract = require("./myContract");
+const myContract = require("./contract");
 
 module.exports.contracts = [myContract];

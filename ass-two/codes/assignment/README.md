@@ -1,4 +1,25 @@
-Setting Environment Variables
+Required Directory Structure
+
+```
+.
+├── assignment
+│   ├── README.md
+│   ├── part-a
+│   │   ├── application
+│   │   └── chaincode
+│   └── part-b
+│       ├── application
+│       └── chaincode
+└── fabric-samples
+    ├── test-network
+    │   ├── network.sh
+    │   ...
+    ...
+```
+
+<br/>
+
+Setting Environment Variables (run this inside `fabric-samples/test-network` directory)
 
 ```bash
 export PATH=${PWD}/../bin:$PATH
@@ -11,8 +32,34 @@ export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org1.examp
 export CORE_PEER_ADDRESS=localhost:7051
 ```
 
-Network up: `./network.sh up -ca`
+<br/>
 
-Create Channel: `./network.sh createChannel -c doge-chain -ca`
+Network up
 
-Deploy: `./network.sh deployCC -c doge-chain -ccn testing-js-1 -ccp ../../../assignment/chaincode/ -ccl javascript -cccg ../../../assignment/chaincode/collections_config.json -ccep "OR('Org1MSP.peer','Org2MSP.peer')"`
+```bash
+./network.sh up -ca
+```
+
+<br/>
+
+Create Channel
+
+```bash
+./network.sh createChannel -c doge-chain -ca
+```
+
+<br/>
+
+Deploy Part A
+
+```bash
+./network.sh deployCC -c doge-chain -ccn part-a -ccp ../../assignment/part-a/chaincode/ -ccl javascript -cccg ../../assignment/part-a/chaincode/collections_config.json -ccep "OR('Org1MSP.peer','Org2MSP.peer')"
+```
+
+<br/>
+
+Deploy Part B
+
+```bash
+./network.sh deployCC -c doge-chain -ccn part-b -ccp ../../assignment/part-b/chaincode/ -ccl javascript -cccg ../../assignment/part-b/chaincode/collections_config.json -ccep "OR('Org1MSP.peer','Org2MSP.peer')"
+```

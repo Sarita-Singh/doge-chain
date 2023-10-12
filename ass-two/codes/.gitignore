@@ -1,6 +1,4 @@
 node_modules
 yarn-error.log
 package-lock.json
-fabric
-fabric-new
-
+fabric-samples

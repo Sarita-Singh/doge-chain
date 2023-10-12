@@ -6,8 +6,8 @@
 
 "use strict";
 
-const RED = "\x1b[31m\n";
-const GREEN = "\x1b[32m\n";
+const RED = "\x1b[31m";
+const GREEN = "\x1b[32m";
 const BLUE = "\x1b[34m";
 const RESET = "\x1b[0m";
 
