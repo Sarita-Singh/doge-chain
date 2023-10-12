@@ -1,6 +1,6 @@
 Required Directory Structure
 
-```
+```graphql
 .
 ├── assignment
 │   ├── README.md
