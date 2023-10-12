@@ -72,8 +72,8 @@ Deploy Part B
 
 # Running Application
 
-- part-a directory: `assignment/part-a/assignment`
-- part-b directory: `assignment/part-b/assignment`
+- part-a directory: `assignment/part-a/application`
+- part-b directory: `assignment/part-b/application`
 
 <br/>
 
