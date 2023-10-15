@@ -32,7 +32,7 @@ const org1UserId = "appUserOrg1";
 const org2UserId = "appUserOrg2";
 
 const MSP = args[0] === "1" ? mspOrg1 : mspOrg2;
-const userId = MSP === mspOrg1 ? org1UserId : org2UserId;
+const userId = `${MSP === mspOrg1 ? org1UserId : org2UserId}-b`;
 
 const walletPath = path.join(__dirname, "wallet", MSP);
 const caHostName = MSP === mspOrg1 ? "ca.org1.example.com" : "ca.org2.example.com";

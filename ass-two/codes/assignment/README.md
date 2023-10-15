@@ -1,3 +1,10 @@
+# Group Members
+
+- Chirag Ghosh (20CS10020)
+- Sarita Singh (20CS10053)
+- Shreya Agrawal (20CS10058)
+- Kartik Pontula (20CS10031)
+
 # Required Directory Structure
 
 ```graphql
@@ -21,7 +28,7 @@
 
 # Setting Environment Variables
 
-Run this inside `fabric-samples/test-network` directory
+Run this inside `fabric-samples/test-network` directory if you want to test the chaincode using commands from the terminal
 
 ```bash
 export PATH=${PWD}/../bin:$PATH

@@ -33,7 +33,7 @@ const org1UserId = "appUserOrg1";
 const org2UserId = "appUserOrg2";
 
 const MSP = args[0] === "1" ? mspOrg1 : mspOrg2;
-const userId = MSP === mspOrg1 ? org1UserId : org2UserId;
+const userId = `${MSP === mspOrg1 ? org1UserId : org2UserId}-b`;
 
 const walletPath = path.join(__dirname, "wallet", MSP);
 const caHostName = MSP === mspOrg1 ? "ca.org1.example.com" : "ca.org2.example.com";
@@ -179,28 +179,42 @@ async function main() {
 
       // Wait for new item to be added
       else {
+
         const listener = async (event) => {
           console.log(
-            `${BLUE}--> Contract Event Received: ${event.eventName} - ${prettyJSONString(event.payload.toString())}`
+            `${BLUE}--> Contract Event Received: ${event.eventName} - ${prettyJSONString(event.payload.toString())}${RESET}`
           );
           if (event.eventName === "AddItemToMarketplace") {
-            const addedItem = JSON.parse(event.payload.toString());
+            console.log(`${BLUE}--> Required Event Detected${RESET}`)
+            const addedItems = JSON.parse(event.payload.toString());
 
             if (fs.existsSync(wishlistFile)) {
-              fs.readFile(wishlistFile, async (error, data) => {
-                if (error) console.log(`${RED}******** FAILED to read wishlist file: ${error}${RESET}`);
-                else {
-                  const lines = data.toString().split("\n");
-                  if (lines.includes(addedItem.name)) {
-                    console.log(`${GREEN}\n--> Item "${addedItem.name}" in wishlist of ${MSP}. Trying to buy.${RESET}`);
+              const lines = fs.readFileSync(wishlistFile).toString().split("\n")
 
-                    let statefulTxn = contract.createTransaction("BuyFromMarket");
-                    statefulTxn.setEndorsingOrganizations(MSP);
-                    await statefulTxn.submit(addedItem.name);
-                    console.log(`${GREEN}\n--> ${MSP} bought ${addedItem.name} from marketplace.${RESET}`);
-                  }
+              await addedItems.forEach(async (addedItem) => {
+                console.log(`${BLUE}DEBUG - ${addedItem.name}, ${lines}${RESET}`)
+                if (lines.includes(addedItem.name)) {
+                  console.log(`${GREEN}\n--> Item "${addedItem.name}" in wishlist of ${MSP}. Trying to buy.${RESET}`);
+
+                  let statefulTxn = contract.createTransaction("BuyFromMarket");
+                  statefulTxn.setEndorsingOrganizations(MSP);
+                  const itemName = addedItem.name;
+                  var exec = require('child_process').exec;
+                  var command = 'node index.js ' + args[0] + ' BUY_ITEM ' + itemName;
+                  console.log(command);
+                  exec(command,
+                    function (error, stdout, stderr) {
+                      console.log('stdout: ' + stdout);
+                      console.log('stderr: ' + stderr);
+                      if (error !== null) {
+                        console.log('exec error: ' + error);
+                      }
+                    });
+                  // console.log((await statefulTxn.submit(itemName)).toString());
+                  console.log(`${GREEN}\n--> ${MSP} bought ${addedItem.name} from marketplace.${RESET}`);
+
                 }
-              });
+              })
             } else {
               if (error) console.log(`${RED}******** No wishlist file found. No action taken.${RESET}`);
             }
@@ -208,6 +222,7 @@ async function main() {
         };
 
         await contract.addContractListener(listener);
+        while (1) { }
       }
     } finally {
       // The inevitable
