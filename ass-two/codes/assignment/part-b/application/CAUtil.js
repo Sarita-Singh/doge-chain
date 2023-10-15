@@ -1,3 +1,5 @@
+/* Code taken from https://github.com/hyperledger/fabric-samples/blob/main/test-application/javascript/CAUtil.js */
+
 /*
  * Copyright IBM Corp. All Rights Reserved.
  *

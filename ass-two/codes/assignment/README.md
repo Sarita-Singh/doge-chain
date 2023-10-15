@@ -142,6 +142,14 @@ node index.js 1 ENLIST_ITEM orange 70
 node index.js 1 ALL_ITEMS
 
 node index.js 2 BUY_ITEM orange (this command is meant for debug purposes)
+
+node index.js 2 WISHLIST orange
+
+node index.js 2 WISHLIST maaza
+
+node index.js 2 (For event trigger mode)
+
+node index.js 1 (For event trigger mode)
 ```
 
 <br/>
