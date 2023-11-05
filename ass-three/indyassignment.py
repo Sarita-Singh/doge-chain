@@ -1,3 +1,4 @@
+from os import environ
 import time
 from indy import anoncreds, did, ledger, pool, wallet
 import json
@@ -38,7 +39,7 @@ def save_pool_genesis_txn_file(path):
         f.writelines(data)
 
 async def create_wallet(identity):
-    logger.info("\"{}\" -> Create wallet".format(identity['name']))
+    logging.info("\"{}\" -> Create wallet".format(identity['name']))
     try:
         await wallet.create_wallet(wallet_config("create", identity['wallet_config']),
                                    wallet_credentials("create", identity['wallet_credentials']))
@@ -135,7 +136,7 @@ async def run():
     pool_ = {
         'name': 'pool1'
     }
-    logger.info("Open Pool Ledger: {}".format(pool_['name']))
+    logging.info("Open Pool Ledger: {}".format(pool_['name']))
     pool_['genesis_txn_path'] = get_pool_genesis_txn_path(pool_['name'])
     pool_['config'] = json.dumps({"genesis_txn": str(pool_['genesis_txn_path'])})
     print(pool_)
@@ -190,11 +191,11 @@ async def run():
 
     await getting_verinym(steward, cbdc)
 
-    logger.info("==============================")
-    logger.info("=== Credential Schemas Setup ==")
-    logger.info("------------------------------")
+    logging.info("==============================")
+    logging.info("=== Credential Schemas Setup ==")
+    logging.info("------------------------------")
 
-    logger.info("\"Government\" -> Create \"Property-Details\" Schema")
+    logging.info("\"Government\" -> Create \"Property-Details\" Schema")
 
     property_details = {
         'name': 'PropertyDetails',
@@ -209,11 +210,11 @@ async def run():
                                              json.dumps(property_details['attributes']))
     property_details_schema_id = government['property_details_schema_id']
 
-    logger.info("\"Government\" -> Send \"Property-Details\" Schema to Ledger")
+    logging.info("\"Government\" -> Send \"Property-Details\" Schema to Ledger")
     schema_request = await ledger.build_schema_request(government['did'], government['property_details_schema'])
     await ledger.sign_and_submit_request(government['pool'], government['wallet'], government['did'], schema_request)
 
-    logger.info("\"Government\" -> Create \"Bonafide-Student\" Schema")
+    logging.info("\"Government\" -> Create \"Bonafide-Student\" Schema")
 
     bonafide_student = {
         'name': 'BonafideStudent',
@@ -227,24 +228,24 @@ async def run():
                                              json.dumps(bonafide_student['attributes']))
     bonafide_student_schema_id = government['bonafide_student_schema_id']
 
-    logger.info("\"Government\" -> Send \"Bonafide-Student\" Schema to Ledger")
+    logging.info("\"Government\" -> Send \"Bonafide-Student\" Schema to Ledger")
     schema_request = await ledger.build_schema_request(government['did'], government['bonafide_student_schema'])
     await ledger.sign_and_submit_request(government['pool'], government['wallet'], government['did'], schema_request)
 
     time.sleep(1)
 
-    logger.info("==============================")
-    logger.info("=== Government Property Details Definition Setup ==")
-    logger.info("------------------------------")
+    logging.info("==============================")
+    logging.info("=== Government Property Details Definition Setup ==")
+    logging.info("------------------------------")
 
-    logger.info("\"Government\" -> Get \"Property Details\" Schema from Ledger")
+    logging.info("\"Government\" -> Get \"Property Details\" Schema from Ledger")
     get_schema_request = await ledger.build_get_schema_request(government['did'], property_details_schema_id)
     get_schema_response = await ensure_previous_request_applied(
         government['pool'], get_schema_request, lambda response: response['result']['data'] is not None) 
     (government['property_details'], government['property_details_schema']) = \
         await ledger.parse_get_schema_response(get_schema_response)
 
-    logger.info("\"Government\" -> Create and store in Wallet \"Property Details\" Credential Definition")
+    logging.info("\"Government\" -> Create and store in Wallet \"Property Details\" Credential Definition")
     property_details_def = {
         'tag': 'TAG1',
         'type': 'CL',
@@ -256,18 +257,18 @@ async def run():
                                                                property_details_def['type'],
                                                                json.dumps(property_details_def['config']))
 
-    logger.info("\"Government\" -> Send  \"Property Details\" Credential Definition to Ledger")
+    logging.info("\"Government\" -> Send  \"Property Details\" Credential Definition to Ledger")
     cred_def_request = await ledger.build_cred_def_request(government['did'], government['property_details_def'])
     await ledger.sign_and_submit_request(government['pool'], government['wallet'], government['did'], cred_def_request)
 
-    logger.info("\"NAA\" -> Get \"Bonafide Student\" Schema from Ledger")
+    logging.info("\"NAA\" -> Get \"Bonafide Student\" Schema from Ledger")
     get_schema_request = await ledger.build_get_schema_request(naa['did'], bonafide_student_schema_id)
     get_schema_response = await ensure_previous_request_applied(
         naa['pool'], get_schema_request, lambda response: response['result']['data'] is not None) 
     (naa['bonafide_student'], naa['bonafide_student_schema']) = \
         await ledger.parse_get_schema_response(get_schema_response)
 
-    logger.info("\"NAA\" -> Create and store in Wallet \"Bonafide Student\" Credential Definition")
+    logging.info("\"NAA\" -> Create and store in Wallet \"Bonafide Student\" Credential Definition")
     bonafide_student_def = {
         'tag': 'TAG1',
         'type': 'CL',
@@ -279,16 +280,16 @@ async def run():
                                                                bonafide_student_def['type'],
                                                                json.dumps(bonafide_student_def['config']))
 
-    logger.info("\"NAA\" -> Send  \"Bonafide Student\" Credential Definition to Ledger")
+    logging.info("\"NAA\" -> Send  \"Bonafide Student\" Credential Definition to Ledger")
     cred_def_request = await ledger.build_cred_def_request(naa['did'], naa['bonafide_student_def'])
     await ledger.sign_and_submit_request(naa['pool'], naa['wallet'], naa['did'], cred_def_request)
     
-    logger.info("==============================")
-    logger.info("=== Getting Bonafide Student certificate from NAA ===")
-    logger.info("------------------------------")
+    logging.info("==============================")
+    logging.info("=== Getting Bonafide Student certificate from NAA ===")
+    logging.info("------------------------------")
     
-    logger.info("== Rajesh setup ==")
-    logger.info("------------------------------")
+    logging.info("== Rajesh setup ==")
+    logging.info("------------------------------")
 
     Rajesh = {
         'name': 'Rajesh',
@@ -301,11 +302,11 @@ async def run():
 
     # NAA creates bonafide certificate offer
 
-    logger.info("\"NAA\" -> Create \"bonafide\" certificate Offer for Rajesh")
+    logging.info("\"NAA\" -> Create \"bonafide\" certificate Offer for Rajesh")
     naa['bonafide_student_offer'] = \
         await anoncreds.issuer_create_credential_offer(naa['wallet'], naa['bonafide_student_def_id'])
 
-    logger.info("\"NAA\" -> Send \"bonafide\" certificate Offer to Rajesh")    
+    logging.info("\"NAA\" -> Send \"bonafide\" certificate Offer to Rajesh")    
     Rajesh['bonafide_student_offer'] = naa['bonafide_student_offer']
 
     print(Rajesh['bonafide_student_offer'])
@@ -317,14 +318,14 @@ async def run():
     Rajesh['bonafide_student_schema_id'] = bonafide_student_offer_object['schema_id']
     Rajesh['bonafide_student_def_id'] = bonafide_student_offer_object['cred_def_id']
 
-    logger.info("\"Rajesh\" -> Create and store \"Rajesh\" Master Secret in Wallet")
+    logging.info("\"Rajesh\" -> Create and store \"Rajesh\" Master Secret in Wallet")
     Rajesh['master_secret_id'] = await anoncreds.prover_create_master_secret(Rajesh['wallet'], None)
 
-    logger.info("\"Rajesh\" -> Get \"naa Transcript\" Credential Definition from Ledger")
+    logging.info("\"Rajesh\" -> Get \"naa Transcript\" Credential Definition from Ledger")
     (Rajesh['naa_bonafide_student_def_id'], Rajesh['naa_bonafide_student_def']) = \
         await get_cred_def(Rajesh['pool'], Rajesh['did'], Rajesh['naa_bonafide_student_def_id'])
 
-    logger.info("\"Rajesh\" -> Create \"bonafide\" certificate Request for naa")
+    logging.info("\"Rajesh\" -> Create \"bonafide\" certificate Request for naa")
     (Rajesh['bonafide_student_request'], Rajesh['bonafide_student_request_metadata']) = \
         await anoncreds.prover_create_credential_req(Rajesh['wallet'], Rajesh['did'],
                                                      Rajesh['bonafide_student_offer'],
@@ -364,18 +365,18 @@ async def run():
 
 
 
-    logger.info("==============================")
-    logger.info("=== Getting 'PropertyDetails' credential from government===")
-    logger.info("------------------------------")
+    logging.info("==============================")
+    logging.info("=== Getting 'PropertyDetails' credential from government===")
+    logging.info("------------------------------")
     
 
     # Government creates PropertyDetails credential offer
 
-    logger.info("\"Government\" -> Create \"PropertyDetails\" credential Offer for Rajesh")
+    logging.info("\"Government\" -> Create \"PropertyDetails\" credential Offer for Rajesh")
     government['property_details_offer'] = \
         await anoncreds.issuer_create_credential_offer(government['wallet'], government['property_details_def_id'])
 
-    logger.info("\"Government\" -> Send \"PropertyDetails\" credential Offer to Rajesh")
+    logging.info("\"Government\" -> Send \"PropertyDetails\" credential Offer to Rajesh")
     Rajesh['property_details_offer'] = government['property_details_offer']
 
     print(Rajesh['property_details_offer'])
@@ -387,14 +388,14 @@ async def run():
     Rajesh['property_details_schema_id'] = property_details_offer_object['schema_id']
     Rajesh['property_details_def_id'] = property_details_offer_object['cred_def_id']
 
-    logger.info("\"Rajesh\" -> Create and store \"Rajesh\" Master Secret in Wallet")
+    logging.info("\"Rajesh\" -> Create and store \"Rajesh\" Master Secret in Wallet")
     Rajesh['master_secret_id'] = await anoncreds.prover_create_master_secret(Rajesh['wallet'], None)
 
-    logger.info("\"Rajesh\" -> Get \"government PropertyDetails\" Credential Definition from Ledger")
+    logging.info("\"Rajesh\" -> Get \"government PropertyDetails\" Credential Definition from Ledger")
     (Rajesh['government_property_details_def_id'], Rajesh['government_property_details_def']) = \
         await get_cred_def(Rajesh['pool'], Rajesh['did'], Rajesh['government_property_details_def_id'])
 
-    logger.info("\"Rajesh\" -> Create \"PropertyDetails\" credential Request for government")
+    logging.info("\"Rajesh\" -> Create \"PropertyDetails\" credential Request for government")
     (Rajesh['property_details_request'], Rajesh['property_details_request_metadata']) = \
         await anoncreds.prover_create_credential_req(Rajesh['wallet'], Rajesh['did'],
                                                      Rajesh['property_details_offer'],
@@ -419,23 +420,23 @@ async def run():
                                                  government['property_details_request'],
                                                  government['Rajesh_property_details_values'], None, None)
 
-    logger.info("\"government\" -> Send \"PropertyDetails\" credential to Rajesh")
+    logging.info("\"government\" -> Send \"PropertyDetails\" credential to Rajesh")
     print(government['property_details'])
     Rajesh['property_details'] = government['property_details']
 
-    logger.info("\"Rajesh\" -> Store \"PropertyDetails\" credential from government")
+    logging.info("\"Rajesh\" -> Store \"PropertyDetails\" credential from government")
     _, Rajesh['property_details_def'] = await get_cred_def(Rajesh['pool'], Rajesh['did'],
                                                          Rajesh['property_details_def_id'])
 
     await anoncreds.prover_store_credential(Rajesh['wallet'], None, Rajesh['property_details_request_metadata'],
                                             Rajesh['property_details'], Rajesh['property_details_def'], None)
     
-    logger.info("\n\n-\n\n", Rajesh['property_details_def'])
+    logging.info("\n\n-\n\n", Rajesh['property_details_def'])
 
     # Part d 
 
     # CBDC Bank creates loan application request 
-    logger.info("\"CBDC Bank\" -> Create \"Loan-Application\" Proof Request")
+    logging.info("\"CBDC Bank\" -> Create \"Loan-Application\" Proof Request")
     nonce = await anoncreds.generate_nonce()
     # have to change restrictions part
     cbdc['loan_application_proof_request'] = json.dumps({
@@ -477,19 +478,19 @@ async def run():
                 'p_type': '>=',
                 'p_value': 2019,
                 'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
-            }
+            },
             'predicate2_referent': {
                 'name': 'student_since_upper_bound',
                 'p_type': '<=',
                 'p_value': 2023,
                 'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
-            }
+            },
             'predicate1_referent': {
                 'name': 'cgpa_bound',
                 'p_type': '>',
                 'p_value': 6,
                 'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
-            }
+            },
             'predicate1_referent': {
                 'name': 'property_value_bound',
                 'p_type': '>',
@@ -499,22 +500,22 @@ async def run():
         }
     })
 
-    logger.info("\"cbdc\" -> Send \"Loan-Application\" Proof Request to Rajesh")
+    logging.info("\"cbdc\" -> Send \"Loan-Application\" Proof Request to Rajesh")
     Rajesh['loan_application_proof_request'] = cbdc['loan_application_proof_request']
 
     print(Rajesh['loan_application_proof_request'])
 
     # Rajesh prepares the presentation ===================================
 
-    logger.info("\n\n->\n\n", Rajesh['loan_application_proof_request'])
+    logging.info("\n\n->\n\n", Rajesh['loan_application_proof_request'])
 
-    logger.info("\"Rajesh\" -> Get credentials for \"Loan-Application\" Proof Request")
+    logging.info("\"Rajesh\" -> Get credentials for \"Loan-Application\" Proof Request")
 
     search_for_loan_application_proof_request = \
         await anoncreds.prover_search_credentials_for_proof_req(Rajesh['wallet'],
                                                                 Rajesh['loan_application_proof_request'], None)
     
-    logger.info("\nsearch_for_loan_application_proof_request\n")
+    logging.info("\nsearch_for_loan_application_proof_request\n")
 
     cred_for_attr1 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr1_referent')
     cred_for_attr2 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr2_referent')
@@ -542,7 +543,7 @@ async def run():
         await prover_get_entities_from_ledger(Rajesh['pool'], Rajesh['did'],
                                               Rajesh['creds_for_loan_application_proof'], Rajesh['name'])
 
-    logger.info("\"Rajesh\" -> Create \"Loan-Application\" Proof")
+    logging.info("\"Rajesh\" -> Create \"Loan-Application\" Proof")
     Rajesh['loan_application_requested_creds'] = json.dumps({
         'self_attested_attributes': {
             'attr1_referent': 'Rajesh',
@@ -567,7 +568,7 @@ async def run():
                                             Rajesh['revoc_states_for_loan_application'])
     print(Rajesh['loan_application_proof'])
 
-    logger.info("\"Rajesh\" -> Send \"Loan-Application\" Proof to cbdc")
+    logging.info("\"Rajesh\" -> Send \"Loan-Application\" Proof to cbdc")
     cbdc['loan_application_proof'] = Rajesh['loan_application_proof']
 
     # Validating the verifiable presentation
@@ -578,7 +579,7 @@ async def run():
         await verifier_get_entities_from_ledger(cbdc['pool'], cbdc['did'],
                                                 loan_application_proof_object['identifiers'], cbdc['name'])
 
-    logger.info("\"cbdc\" -> Verify \"Loan-Application\" Proof from Rajesh")
+    logging.info("\"cbdc\" -> Verify \"Loan-Application\" Proof from Rajesh")
     assert '2022' == \
            loan_application_proof_object['requested_proof']['revealed_attrs']['attr4_referent']['raw']
     assert '8' == \
