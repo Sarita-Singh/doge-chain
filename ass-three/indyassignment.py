@@ -485,13 +485,13 @@ async def run():
                 'p_value': 2023,
                 'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
             },
-            'predicate1_referent': {
+            'predicate3_referent': {
                 'name': 'cgpa_bound',
                 'p_type': '>',
                 'p_value': 6,
                 'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
             },
-            'predicate1_referent': {
+            'predicate4_referent': {
                 'name': 'property_value_bound',
                 'p_type': '>',
                 'p_value': 800000,
@@ -522,10 +522,26 @@ async def run():
     cred_for_attr3 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr3_referent')
     cred_for_attr4 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr4_referent')
     cred_for_attr5 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr5_referent')
+    cred_for_attr6 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr6_referent')
+    cred_for_attr7 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr7_referent')
+    cred_for_attr8 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr8_referent')
     cred_for_predicate1 = \
         await get_credential_for_referent(search_for_loan_application_proof_request, 'predicate1_referent')
+    cred_for_predicate2 = \
+        await get_credential_for_referent(search_for_loan_application_proof_request, 'predicate2_referent')
+    cred_for_predicate3 = \
+        await get_credential_for_referent(search_for_loan_application_proof_request, 'predicate3_referent')
+    cred_for_predicate4 = \
+        await get_credential_for_referent(search_for_loan_application_proof_request, 'predicate4_referent')
     
     print(cred_for_attr1)
+    print(cred_for_attr2)
+    print(cred_for_attr3)
+    print(cred_for_attr4)
+    print(cred_for_attr5)
+    print(cred_for_attr6)
+    print(cred_for_attr7)
+    print(cred_for_attr8)
 
     await anoncreds.prover_close_credentials_search_for_proof_req(search_for_loan_application_proof_request)
 
@@ -534,7 +550,13 @@ async def run():
                                                 cred_for_attr3['referent']: cred_for_attr3,
                                                 cred_for_attr4['referent']: cred_for_attr4,
                                                 cred_for_attr5['referent']: cred_for_attr5,
-                                                cred_for_predicate1['referent']: cred_for_predicate1}
+                                                cred_for_attr6['referent']: cred_for_attr6,
+                                                cred_for_attr7['referent']: cred_for_attr7,
+                                                cred_for_attr8['referent']: cred_for_attr8,
+                                                cred_for_predicate1['referent']: cred_for_predicate1
+                                                cred_for_predicate2['referent']: cred_for_predicate2
+                                                cred_for_predicate3['referent']: cred_for_predicate3
+                                                cred_for_predicate4['referent']: cred_for_predicate4}
 
     print(Rajesh['creds_for_loan_application_proof'])
 
@@ -557,7 +579,11 @@ async def run():
             'attr5_referent': {'cred_id': cred_for_attr5['referent'], 'revealed': True},
             'attr7_referent': {'cred_id': cred_for_attr7['referent'], 'revealed': True},
         },
-        'requested_predicates': {'predicate1_referent': {'cred_id': cred_for_predicate1['referent']}}
+        'requested_predicates': {'predicate1_referent': {'cred_id': cred_for_predicate1['referent']},
+                                 'predicate2_referent': {'cred_id': cred_for_predicate2['referent']},
+                                 'predicate3_referent': {'cred_id': cred_for_predicate3['referent']},
+                                 'predicate4_referent': {'cred_id': cred_for_predicate4['referent']},
+        }
     })
 
     Rajesh['loan_application_proof'] = \
@@ -593,7 +619,7 @@ async def run():
     assert 'Malancha Road, Kharagpur' == loan_application_proof_object['requested_proof']['self_attested_attrs']['attr6_referent']
     assert '2010' == loan_application_proof_object['requested_proof']['self_attested_attrs']['attr8_referent']
 
-    assert await anoncreds.verifier_verify_proof(cbdc['job_application_proof_request'], cbdc['loan_application_proof'],
+    assert await anoncreds.verifier_verify_proof(cbdc['loan_application_proof_request'], cbdc['loan_application_proof'],
                                                  cbdc['schemas_for_loan_application'],
                                                  cbdc['cred_defs_for_loan_application'],
                                                  cbdc['revoc_ref_defs_for_loan_application'],
