@@ -82,6 +82,13 @@ async def get_credential_for_referent(search_handle, referent):
     credentials = json.loads(
         await anoncreds.prover_fetch_credentials_for_proof_req(search_handle, referent, 10))
     return credentials[0]['cred_info']
+    
+async def get_cred_def(pool_handle, _did, cred_def_id):
+    get_cred_def_request = await ledger.build_get_cred_def_request(_did, cred_def_id)
+    get_cred_def_response = \
+        await ensure_previous_request_applied(pool_handle, get_cred_def_request,
+                                              lambda response: response['result']['data'] is not None)
+    return await ledger.parse_get_cred_def_response(get_cred_def_response)
 
 async def prover_get_entities_from_ledger(pool_handle, _did, identifiers, actor, from_timestamp=None,
                                           to_timestamp=None):
@@ -556,10 +563,10 @@ async def run():
                                                 cred_for_attr6['referent']: cred_for_attr6,
                                                 cred_for_attr7['referent']: cred_for_attr7,
                                                 cred_for_attr8['referent']: cred_for_attr8,
-                                                cred_for_predicate1['referent']: cred_for_predicate1
-                                                cred_for_predicate2['referent']: cred_for_predicate2
-                                                cred_for_predicate3['referent']: cred_for_predicate3
-                                                cred_for_predicate4['referent']: cred_for_predicate4}
+                                                cred_for_predicate1['referent']: cred_for_predicate1,
+                                                cred_for_predicate2['referent']: cred_for_predicate2,
+                                                cred_for_predicate3['referent']: cred_for_predicate3,
+                                                cred_for_predicate4['referent']: cred_for_predicate4,}
 
     print(Rajesh['creds_for_loan_application_proof'])
 
