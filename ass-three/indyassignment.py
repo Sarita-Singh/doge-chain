@@ -1,4 +1,6 @@
 # Roll Nos.: 20CS10058, 20CS10020, 20CS10053, 20CS10031
+# Reference taken from: https://github.com/hyperledger/indy-sdk/blob/main/samples/python/src/getting_started.py
+
 from os import environ
 import time
 from indy import anoncreds, did, ledger, pool, wallet
@@ -91,11 +93,11 @@ async def get_cred_def(pool_handle, _did, cred_def_id):
                                               lambda response: response['result']['data'] is not None)
     return await ledger.parse_get_cred_def_response(get_cred_def_response)
 
-async def prover_get_entities_from_ledger(pool_handle, _did, identifiers, actor, from_timestamp=None,
-                                          to_timestamp=None):
-    credential_defs = {}
-    rev_states = {}
+async def prover_get_entities_from_ledger(pool_handle, _did, identifiers, actor, timestamp_from=None,
+                                          timestamp_to=None):
     schemas = {}
+    cred_defs = {}
+    rev_states = {}
     for item in identifiers.values():
         print("\"{}\" -> Get Schema from Ledger".format(actor))
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.", item['schema_id'])
@@ -104,7 +106,7 @@ async def prover_get_entities_from_ledger(pool_handle, _did, identifiers, actor,
 
         print("\"{}\" -> Get Claim Definition from Ledger".format(actor))
         (received_cred_def_id, received_cred_def) = await get_cred_def(pool_handle, _did, item['cred_def_id'])
-        credential_defs[received_cred_def_id] = json.loads(received_cred_def)
+        cred_defs[received_cred_def_id] = json.loads(received_cred_def)
 
         if 'rev_reg_id' in item and item['rev_reg_id'] is not None:
             # Create Revocations States
@@ -117,9 +119,9 @@ async def prover_get_entities_from_ledger(pool_handle, _did, identifiers, actor,
             (rev_reg_id, revoc_reg_def_json) = await ledger.parse_get_revoc_reg_def_response(get_revoc_reg_def_response)
 
             print("\"{}\" -> Get Revocation Registry Delta from Ledger".format(actor))
-            if not to_timestamp: to_timestamp = int(time.time())
+            if not timestamp_to: timestamp_to = int(time.time())
             get_revoc_reg_delta_request = \
-                await ledger.build_get_revoc_reg_delta_request(_did, item['rev_reg_id'], from_timestamp, to_timestamp)
+                await ledger.build_get_revoc_reg_delta_request(_did, item['rev_reg_id'], timestamp_from, timestamp_to)
             get_revoc_reg_delta_response = \
                 await ensure_previous_request_applied(pool_handle, get_revoc_reg_delta_request,
                                                       lambda response: response['result']['data'] is not None)
@@ -137,7 +139,7 @@ async def prover_get_entities_from_ledger(pool_handle, _did, identifiers, actor,
                                                         revoc_reg_delta_json, t, item['cred_rev_id'])
             rev_states[rev_reg_id] = {t: json.loads(rev_state_json)}
 
-    return json.dumps(schemas), json.dumps(credential_defs), json.dumps(rev_states)
+    return json.dumps(schemas), json.dumps(cred_defs), json.dumps(rev_states)
 
 async def run():
 
