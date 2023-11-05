@@ -455,7 +455,10 @@ async def run():
             },
             'attr4_referent': {
                 'name': 'student_since_year',
-                'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
+                'restrictions': [
+                    { 'cred_def_id': student_since_lower_CredDefId },
+                    { 'cred_def_id': student_since_upper_CredDefId }
+                ]
             },
             'attr5_referent': {
                 'name': 'cgpa',
@@ -477,13 +480,13 @@ async def run():
                 'name': 'student_since_lower_bound',
                 'p_type': '>=',
                 'p_value': 2019,
-                'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
+                'restrictions': [{'cred_def_id': student_since_lower_CredDefId}]
             },
             'predicate2_referent': {
                 'name': 'student_since_upper_bound',
                 'p_type': '<=',
                 'p_value': 2023,
-                'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
+                'restrictions': [{'cred_def_id': student_since_upper_CredDefId}]
             },
             'predicate3_referent': {
                 'name': 'cgpa_bound',
