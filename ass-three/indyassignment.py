@@ -1,3 +1,4 @@
+# Roll Nos.: 20CS10058, 20CS10020, 20CS10053, 20CS10031
 from os import environ
 import time
 from indy import anoncreds, did, ledger, pool, wallet
@@ -82,7 +83,7 @@ async def get_credential_for_referent(search_handle, referent):
     credentials = json.loads(
         await anoncreds.prover_fetch_credentials_for_proof_req(search_handle, referent, 10))
     return credentials[0]['cred_info']
-    
+
 async def get_cred_def(pool_handle, _did, cred_def_id):
     get_cred_def_request = await ledger.build_get_cred_def_request(_did, cred_def_id)
     get_cred_def_response = \
@@ -330,7 +331,7 @@ async def run():
 
     logging.info("\"Rajesh\" -> Get \"naa Transcript\" Credential Definition from Ledger")
     (Rajesh['naa_bonafide_student_def_id'], Rajesh['naa_bonafide_student_def']) = \
-        await get_cred_def(Rajesh['pool'], Rajesh['did'], Rajesh['naa_bonafide_student_def_id'])
+        await get_cred_def(Rajesh['pool'], Rajesh['did'], Rajesh['bonafide_student_def_id'])
 
     logging.info("\"Rajesh\" -> Create \"bonafide\" certificate Request for naa")
     (Rajesh['bonafide_student_request'], Rajesh['bonafide_student_request_metadata']) = \
@@ -346,8 +347,8 @@ async def run():
     print("\"NAA\" -> Create \"bonafide\" certificate for Rajesh")
     # encoded value of non-integer attribute is SHA256 converted to decimal
     naa['Rajesh_bonafide_student_values'] = json.dumps({
-        "first_name": {"raw": "Rajesh", "encoded": "61128178701959270985030776464813634457025117419642008842185559604383054644572"},
-        "last_name": {"raw": "Kumar", "encoded": "9628796848593399296846015413457437787688669743501058069201688673874032969253"},
+        "student_first_name": {"raw": "Rajesh", "encoded": "61128178701959270985030776464813634457025117419642008842185559604383054644572"},
+        "student_last_name": {"raw": "Kumar", "encoded": "9628796848593399296846015413457437787688669743501058069201688673874032969253"},
         "degree_name": {"raw": "Pilot Training Programme", "encoded": "88808222341925514205595497221537271606006691185381008920976043208354606982292"},
         "student_since_year": {"raw": "2022", "encoded": "2022"},
         "cgpa": {"raw": "8", "encoded": "8"}
@@ -400,7 +401,7 @@ async def run():
 
     logging.info("\"Rajesh\" -> Get \"government PropertyDetails\" Credential Definition from Ledger")
     (Rajesh['government_property_details_def_id'], Rajesh['government_property_details_def']) = \
-        await get_cred_def(Rajesh['pool'], Rajesh['did'], Rajesh['government_property_details_def_id'])
+        await get_cred_def(Rajesh['pool'], Rajesh['did'], Rajesh['property_details_def_id'])
 
     logging.info("\"Rajesh\" -> Create \"PropertyDetails\" credential Request for government")
     (Rajesh['property_details_request'], Rajesh['property_details_request_metadata']) = \
@@ -416,8 +417,8 @@ async def run():
     print("\"Government\" -> Create \"PropertyDetails\" credential for Rajesh")
     # encoded value of non-integer attribute is SHA256 converted to decimal
     government['Rajesh_property_details_values'] = json.dumps({
-        "first_name": {"raw": "Rajesh", "encoded": "61128178701959270985030776464813634457025117419642008842185559604383054644572"},
-        "last_name": {"raw": "Kumar", "encoded": "9628796848593399296846015413457437787688669743501058069201688673874032969253"},
+        "owner_first_name": {"raw": "Rajesh", "encoded": "61128178701959270985030776464813634457025117419642008842185559604383054644572"},
+        "owner_last_name": {"raw": "Kumar", "encoded": "9628796848593399296846015413457437787688669743501058069201688673874032969253"},
         "address_of_property": {"raw": "Malancha Road, Kharagpur", "encoded": "40124272564153356135322415401652142391558081737536971014701520100295852485629"},
         "property_value_estimate": {"raw": "2000000", "encoded": "2000000"},
         "residing_since_year": {"raw": "2010", "encoded": "2010"}
