@@ -229,6 +229,165 @@ async def run():
     logger.info("\"NAA\" -> Send  \"Bonafide Student\" Credential Definition to Ledger")
     cred_def_request = await ledger.build_cred_def_request(naa['did'], naa['bonafide_student_def'])
     await ledger.sign_and_submit_request(naa['pool'], naa['wallet'], naa['did'], cred_def_request)
+    
+    logger.info("==============================")
+    logger.info("=== Getting Bonafide Student certificate from NAA ===")
+    logger.info("------------------------------")
+    
+    logger.info("== Rajesh setup ==")
+    logger.info("------------------------------")
+
+    Rajesh = {
+        'name': 'Rajesh',
+        'wallet_config': json.dumps({'id': 'Rajesh_wallet'}),
+        'wallet_credentials': json.dumps({'key': 'Rajesh_wallet_key'}),
+        'pool': pool_['handle'],
+    }
+    await create_wallet(Rajesh)
+    (Rajesh['did'], Rajesh['key']) = await did.create_and_store_my_did(Rajesh['wallet'], "{}")
+
+    # NAA creates bonafide certificate offer
+
+    logger.info("\"NAA\" -> Create \"bonafide\" certificate Offer for Rajesh")
+    naa['bonafide_student_offer'] = \
+        await anoncreds.issuer_create_credential_offer(naa['wallet'], naa['bonafide_student_def_id'])
+
+    logger.info("\"NAA\" -> Send \"bonafide\" certificate Offer to Rajesh")
+    
+    # Over Network 
+    Rajesh['bonafide_student_offer'] = naa['bonafide_student_offer']
+
+    print(Rajesh['bonafide_student_offer'])
+
+     # Rajesh prepares a bonafide certificate request
+
+    bonafide_student_offer_object = json.loads(Rajesh['bonafide_student_offer'])
+
+    Rajesh['bonafide_student_schema_id'] = bonafide_student_offer_object['schema_id']
+    Rajesh['bonafide_student_def_id'] = bonafide_student_offer_object['cred_def_id']
+
+    logger.info("\"Rajesh\" -> Create and store \"Rajesh\" Master Secret in Wallet")
+    Rajesh['master_secret_id'] = await anoncreds.prover_create_master_secret(Rajesh['wallet'], None)
+
+    logger.info("\"Rajesh\" -> Get \"naa Transcript\" Credential Definition from Ledger")
+    (Rajesh['naa_bonafide_student_def_id'], Rajesh['naa_bonafide_student_def']) = \
+        await get_cred_def(Rajesh['pool'], Rajesh['did'], Rajesh['naa_bonafide_student_def_id'])
+
+    logger.info("\"Rajesh\" -> Create \"bonafide\" certificate Request for naa")
+    (Rajesh['bonafide_student_request'], Rajesh['bonafide_student_request_metadata']) = \
+        await anoncreds.prover_create_credential_req(Rajesh['wallet'], Rajesh['did'],
+                                                     Rajesh['bonafide_student_offer'],
+                                                     Rajesh['naa_bonafide_student_def'],
+                                                     Rajesh['master_secret_id'])
+
+    print("\"Rajesh\" -> Send \"bonafide\" certificate Request to naa")
+
+    # Over Network
+    naa['bonafide_student_request'] = Rajesh['bonafide_student_request']
+
+    # NAA issues credential to Rajesh ----------------
+    print("\"NAA\" -> Create \"bonafide\" certificate for Rajesh")
+    # can use any type of encoding scheme according to documentation
+    naa['Rajesh_bonafide_student_values'] = json.dumps({
+        "first_name": {"raw": "Rajesh", "encoded": "1139481716457488690172217916278103335"},
+        "last_name": {"raw": "Kumar", "encoded": "5321642780241790123587902456789123452"},
+        "degree_name": {"raw": "Pilot Training Programme", "encoded": "12434523576212321"},
+        "student_since_year": {"raw": "2022", "encoded": "2022"},
+        "cgpa": {"raw": "8", "encoded": "8"}
+    })
+    naa['bonafide_student_cred'], _, _ = \
+        await anoncreds.issuer_create_credential(naa['wallet'], naa['bonafide_student_offer'],
+                                                 naa['bonafide_student_request'],
+                                                 naa['Rajesh_bonafide_student_values'], None, None)
+
+    print("\"naa\" -> Send \"bonafide\" certificate to Rajesh")
+    print(naa['bonafide_student'])
+    # Over the network
+    Rajesh['bonafide_student'] = naa['bonafide_student']
+
+    print("\"Rajesh\" -> Store \"bonafide\" certificate from naa")
+    _, Rajesh['bonafide_student_def'] = await get_cred_def(Rajesh['pool'], Rajesh['did'],
+                                                         Rajesh['bonafide_student_def_id'])
+
+    await anoncreds.prover_store_credential(Rajesh['wallet'], None, Rajesh['bonafide_student_request_metadata'],
+                                            Rajesh['bonafide_student'], Rajesh['bonafide_student_def'], None)
+    
+    print("\n\n>>>>>>>>>>>>>>>>>>>>>>.\n\n", Rajesh['bonafide_student_def'])
+
+
+
+    logger.info("==============================")
+    logger.info("=== Getting 'PropertyDetails' credential from government===")
+    logger.info("------------------------------")
+    
+
+    # Government creates PropertyDetails credential offer
+
+    logger.info("\"Government\" -> Create \"PropertyDetails\" credential Offer for Rajesh")
+    government['property_details_offer'] = \
+        await anoncreds.issuer_create_credential_offer(government['wallet'], government['property_details_def_id'])
+
+    logger.info("\"Government\" -> Send \"PropertyDetails\" credential Offer to Rajesh")
+    
+    # Over Network 
+    Rajesh['property_details_offer'] = government['property_details_offer']
+
+    print(Rajesh['property_details_offer'])
+
+     # Rajesh prepares a property details request
+
+    property_details_offer_object = json.loads(Rajesh['property_details_offer'])
+
+    Rajesh['property_details_schema_id'] = property_details_offer_object['schema_id']
+    Rajesh['property_details_def_id'] = property_details_offer_object['cred_def_id']
+
+    logger.info("\"Rajesh\" -> Create and store \"Rajesh\" Master Secret in Wallet")
+    Rajesh['master_secret_id'] = await anoncreds.prover_create_master_secret(Rajesh['wallet'], None)
+
+    logger.info("\"Rajesh\" -> Get \"government PropertyDetails\" Credential Definition from Ledger")
+    (Rajesh['government_property_details_def_id'], Rajesh['government_property_details_def']) = \
+        await get_cred_def(Rajesh['pool'], Rajesh['did'], Rajesh['government_property_details_def_id'])
+
+    logger.info("\"Rajesh\" -> Create \"PropertyDetails\" credential Request for government")
+    (Rajesh['property_details_request'], Rajesh['property_details_request_metadata']) = \
+        await anoncreds.prover_create_credential_req(Rajesh['wallet'], Rajesh['did'],
+                                                     Rajesh['property_details_offer'],
+                                                     Rajesh['government_property_details_def'],
+                                                     Rajesh['master_secret_id'])
+
+    print("\"Rajesh\" -> Send \"PropertyDetails\" credential Request to government")
+
+    # Over Network
+    government['property_details_request'] = Rajesh['property_details_request']
+
+    # government issues credential to Rajesh ----------------
+    print("\"Government\" -> Create \"PropertyDetails\" credential for Rajesh")
+    # change this encoding. can use any type of encoding scheme according to documentation
+    government['Rajesh_property_details_values'] = json.dumps({
+        "first_name": {"raw": "Rajesh", "encoded": "1139481716457488690172217916278103335"},
+        "last_name": {"raw": "Kumar", "encoded": "5321642780241790123587902456789123452"},
+        "address_of_property": {"raw": "Malancha Road, Kharagpur", "encoded": "12434523576212321"},
+        "property_value_estimate": {"raw": "2000000", "encoded": "2000000"},
+        "residing_since_year": {"raw": "2010", "encoded": "2010"}
+    })
+    government['property_details_cred'], _, _ = \
+        await anoncreds.issuer_create_credential(government['wallet'], government['property_details_offer'],
+                                                 government['property_details_request'],
+                                                 government['Rajesh_property_details_values'], None, None)
+
+    print("\"government\" -> Send \"PropertyDetails\" credential to Rajesh")
+    print(government['property_details'])
+    # Over the network
+    Rajesh['property_details'] = government['property_details']
+
+    print("\"Rajesh\" -> Store \"PropertyDetails\" credential from government")
+    _, Rajesh['property_details_def'] = await get_cred_def(Rajesh['pool'], Rajesh['did'],
+                                                         Rajesh['property_details_def_id'])
+
+    await anoncreds.prover_store_credential(Rajesh['wallet'], None, Rajesh['property_details_request_metadata'],
+                                            Rajesh['property_details'], Rajesh['property_details_def'], None)
+    
+    print("\n\n>>>>>>>>>>>>>>>>>>>>>>.\n\n", Rajesh['property_details_def'])
 
 
 loop = asyncio.get_event_loop()
