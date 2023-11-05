@@ -77,6 +77,59 @@ async def ensure_previous_request_applied(pool_handle, checker_request, checker)
             pass
         time.sleep(5)
 
+async def get_credential_for_referent(search_handle, referent):
+    credentials = json.loads(
+        await anoncreds.prover_fetch_credentials_for_proof_req(search_handle, referent, 10))
+    return credentials[0]['cred_info']
+
+async def prover_get_entities_from_ledger(pool_handle, _did, identifiers, actor, from_timestamp=None,
+                                          to_timestamp=None):
+    credential_defs = {}
+    rev_states = {}
+    schemas = {}
+    for item in identifiers.values():
+        print("\"{}\" -> Get Schema from Ledger".format(actor))
+        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.", item['schema_id'])
+        (received_schema_id, received_schema) = await get_schema(pool_handle, _did, item['schema_id'])
+        schemas[received_schema_id] = json.loads(received_schema)
+
+        print("\"{}\" -> Get Claim Definition from Ledger".format(actor))
+        (received_cred_def_id, received_cred_def) = await get_cred_def(pool_handle, _did, item['cred_def_id'])
+        credential_defs[received_cred_def_id] = json.loads(received_cred_def)
+
+        if 'rev_reg_id' in item and item['rev_reg_id'] is not None:
+            # Create Revocations States
+            print("\"{}\" -> Get Revocation Registry Definition from Ledger".format(actor))
+            get_revoc_reg_def_request = await ledger.build_get_revoc_reg_def_request(_did, item['rev_reg_id'])
+
+            get_revoc_reg_def_response = \
+                await ensure_previous_request_applied(pool_handle, get_revoc_reg_def_request,
+                                                      lambda response: response['result']['data'] is not None)
+            (rev_reg_id, revoc_reg_def_json) = await ledger.parse_get_revoc_reg_def_response(get_revoc_reg_def_response)
+
+            print("\"{}\" -> Get Revocation Registry Delta from Ledger".format(actor))
+            if not to_timestamp: to_timestamp = int(time.time())
+            get_revoc_reg_delta_request = \
+                await ledger.build_get_revoc_reg_delta_request(_did, item['rev_reg_id'], from_timestamp, to_timestamp)
+            get_revoc_reg_delta_response = \
+                await ensure_previous_request_applied(pool_handle, get_revoc_reg_delta_request,
+                                                      lambda response: response['result']['data'] is not None)
+            (rev_reg_id, revoc_reg_delta_json, t) = \
+                await ledger.parse_get_revoc_reg_delta_response(get_revoc_reg_delta_response)
+
+            tails_reader_config = json.dumps(
+                {'base_dir': dirname(json.loads(revoc_reg_def_json)['value']['tailsLocation']),
+                 'uri_pattern': ''})
+            blob_storage_reader_cfg_handle = await blob_storage.open_reader('default', tails_reader_config)
+
+            print('%s - Create Revocation State', actor)
+            rev_state_json = \
+                await anoncreds.create_revocation_state(blob_storage_reader_cfg_handle, revoc_reg_def_json,
+                                                        revoc_reg_delta_json, t, item['cred_rev_id'])
+            rev_states[rev_reg_id] = {t: json.loads(rev_state_json)}
+
+    return json.dumps(schemas), json.dumps(credential_defs), json.dumps(rev_states)
+
 async def run():
 
     pool_ = {
@@ -252,9 +305,7 @@ async def run():
     naa['bonafide_student_offer'] = \
         await anoncreds.issuer_create_credential_offer(naa['wallet'], naa['bonafide_student_def_id'])
 
-    logger.info("\"NAA\" -> Send \"bonafide\" certificate Offer to Rajesh")
-    
-    # Over Network 
+    logger.info("\"NAA\" -> Send \"bonafide\" certificate Offer to Rajesh")    
     Rajesh['bonafide_student_offer'] = naa['bonafide_student_offer']
 
     print(Rajesh['bonafide_student_offer'])
@@ -281,17 +332,15 @@ async def run():
                                                      Rajesh['master_secret_id'])
 
     print("\"Rajesh\" -> Send \"bonafide\" certificate Request to naa")
-
-    # Over Network
     naa['bonafide_student_request'] = Rajesh['bonafide_student_request']
 
     # NAA issues credential to Rajesh ----------------
     print("\"NAA\" -> Create \"bonafide\" certificate for Rajesh")
-    # can use any type of encoding scheme according to documentation
+    # encoded value of non-integer attribute is SHA256 converted to decimal
     naa['Rajesh_bonafide_student_values'] = json.dumps({
-        "first_name": {"raw": "Rajesh", "encoded": "1139481716457488690172217916278103335"},
-        "last_name": {"raw": "Kumar", "encoded": "5321642780241790123587902456789123452"},
-        "degree_name": {"raw": "Pilot Training Programme", "encoded": "12434523576212321"},
+        "first_name": {"raw": "Rajesh", "encoded": "61128178701959270985030776464813634457025117419642008842185559604383054644572"},
+        "last_name": {"raw": "Kumar", "encoded": "9628796848593399296846015413457437787688669743501058069201688673874032969253"},
+        "degree_name": {"raw": "Pilot Training Programme", "encoded": "88808222341925514205595497221537271606006691185381008920976043208354606982292"},
         "student_since_year": {"raw": "2022", "encoded": "2022"},
         "cgpa": {"raw": "8", "encoded": "8"}
     })
@@ -302,7 +351,6 @@ async def run():
 
     print("\"naa\" -> Send \"bonafide\" certificate to Rajesh")
     print(naa['bonafide_student'])
-    # Over the network
     Rajesh['bonafide_student'] = naa['bonafide_student']
 
     print("\"Rajesh\" -> Store \"bonafide\" certificate from naa")
@@ -328,13 +376,11 @@ async def run():
         await anoncreds.issuer_create_credential_offer(government['wallet'], government['property_details_def_id'])
 
     logger.info("\"Government\" -> Send \"PropertyDetails\" credential Offer to Rajesh")
-    
-    # Over Network 
     Rajesh['property_details_offer'] = government['property_details_offer']
 
     print(Rajesh['property_details_offer'])
 
-     # Rajesh prepares a property details request
+    # Rajesh prepares a property details request
 
     property_details_offer_object = json.loads(Rajesh['property_details_offer'])
 
@@ -356,17 +402,15 @@ async def run():
                                                      Rajesh['master_secret_id'])
 
     print("\"Rajesh\" -> Send \"PropertyDetails\" credential Request to government")
-
-    # Over Network
     government['property_details_request'] = Rajesh['property_details_request']
 
     # government issues credential to Rajesh ----------------
     print("\"Government\" -> Create \"PropertyDetails\" credential for Rajesh")
-    # change this encoding. can use any type of encoding scheme according to documentation
+    # encoded value of non-integer attribute is SHA256 converted to decimal
     government['Rajesh_property_details_values'] = json.dumps({
-        "first_name": {"raw": "Rajesh", "encoded": "1139481716457488690172217916278103335"},
-        "last_name": {"raw": "Kumar", "encoded": "5321642780241790123587902456789123452"},
-        "address_of_property": {"raw": "Malancha Road, Kharagpur", "encoded": "12434523576212321"},
+        "first_name": {"raw": "Rajesh", "encoded": "61128178701959270985030776464813634457025117419642008842185559604383054644572"},
+        "last_name": {"raw": "Kumar", "encoded": "9628796848593399296846015413457437787688669743501058069201688673874032969253"},
+        "address_of_property": {"raw": "Malancha Road, Kharagpur", "encoded": "40124272564153356135322415401652142391558081737536971014701520100295852485629"},
         "property_value_estimate": {"raw": "2000000", "encoded": "2000000"},
         "residing_since_year": {"raw": "2010", "encoded": "2010"}
     })
@@ -375,19 +419,184 @@ async def run():
                                                  government['property_details_request'],
                                                  government['Rajesh_property_details_values'], None, None)
 
-    print("\"government\" -> Send \"PropertyDetails\" credential to Rajesh")
+    logger.info("\"government\" -> Send \"PropertyDetails\" credential to Rajesh")
     print(government['property_details'])
-    # Over the network
     Rajesh['property_details'] = government['property_details']
 
-    print("\"Rajesh\" -> Store \"PropertyDetails\" credential from government")
+    logger.info("\"Rajesh\" -> Store \"PropertyDetails\" credential from government")
     _, Rajesh['property_details_def'] = await get_cred_def(Rajesh['pool'], Rajesh['did'],
                                                          Rajesh['property_details_def_id'])
 
     await anoncreds.prover_store_credential(Rajesh['wallet'], None, Rajesh['property_details_request_metadata'],
                                             Rajesh['property_details'], Rajesh['property_details_def'], None)
     
-    print("\n\n>>>>>>>>>>>>>>>>>>>>>>.\n\n", Rajesh['property_details_def'])
+    logger.info("\n\n-\n\n", Rajesh['property_details_def'])
+
+    # Part d 
+
+    # CBDC Bank creates loan application request 
+    logger.info("\"CBDC Bank\" -> Create \"Loan-Application\" Proof Request")
+    nonce = await anoncreds.generate_nonce()
+    # have to change restrictions part
+    cbdc['loan_application_proof_request'] = json.dumps({
+        'nonce': nonce,
+        'name': 'Loan-Application',
+        'version': '0.1',
+        'requested_attributes': {
+            'attr1_referent': {
+                'name': 'first_name'
+            },
+            'attr2_referent': {
+                'name': 'last_name'
+            },
+            'attr3_referent': {
+                'name': 'degree_name'
+            },
+            'attr4_referent': {
+                'name': 'student_since_year',
+                'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
+            },
+            'attr5_referent': {
+                'name': 'cgpa',
+                'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
+            },
+            'attr6_referent': {
+                'name': 'address_of_property'
+            },
+            'attr7_referent': {
+                'name': 'property_value_estimate',
+                'restrictions': [{'cred_def_id': government['property_details_def']}]
+            },
+            'attr8_referent': {
+                'name': 'residing_since_year'
+            }
+        },
+        'requested_predicates': {
+            'predicate1_referent': {
+                'name': 'student_since_lower_bound',
+                'p_type': '>=',
+                'p_value': 2019,
+                'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
+            }
+            'predicate2_referent': {
+                'name': 'student_since_upper_bound',
+                'p_type': '<=',
+                'p_value': 2023,
+                'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
+            }
+            'predicate1_referent': {
+                'name': 'cgpa_bound',
+                'p_type': '>',
+                'p_value': 6,
+                'restrictions': [{'cred_def_id': naa['bonafide_student_def']}]
+            }
+            'predicate1_referent': {
+                'name': 'property_value_bound',
+                'p_type': '>',
+                'p_value': 800000,
+                'restrictions': [{'cred_def_id': government['property_details_def']}]
+            }
+        }
+    })
+
+    logger.info("\"cbdc\" -> Send \"Loan-Application\" Proof Request to Rajesh")
+    Rajesh['loan_application_proof_request'] = cbdc['loan_application_proof_request']
+
+    print(Rajesh['loan_application_proof_request'])
+
+    # Rajesh prepares the presentation ===================================
+
+    logger.info("\n\n->\n\n", Rajesh['loan_application_proof_request'])
+
+    logger.info("\"Rajesh\" -> Get credentials for \"Loan-Application\" Proof Request")
+
+    search_for_loan_application_proof_request = \
+        await anoncreds.prover_search_credentials_for_proof_req(Rajesh['wallet'],
+                                                                Rajesh['loan_application_proof_request'], None)
+    
+    logger.info("\nsearch_for_loan_application_proof_request\n")
+
+    cred_for_attr1 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr1_referent')
+    cred_for_attr2 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr2_referent')
+    cred_for_attr3 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr3_referent')
+    cred_for_attr4 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr4_referent')
+    cred_for_attr5 = await get_credential_for_referent(search_for_loan_application_proof_request, 'attr5_referent')
+    cred_for_predicate1 = \
+        await get_credential_for_referent(search_for_loan_application_proof_request, 'predicate1_referent')
+    
+    print(cred_for_attr1)
+
+    await anoncreds.prover_close_credentials_search_for_proof_req(search_for_loan_application_proof_request)
+
+    Rajesh['creds_for_loan_application_proof'] = {cred_for_attr1['referent']: cred_for_attr1,
+                                                cred_for_attr2['referent']: cred_for_attr2,
+                                                cred_for_attr3['referent']: cred_for_attr3,
+                                                cred_for_attr4['referent']: cred_for_attr4,
+                                                cred_for_attr5['referent']: cred_for_attr5,
+                                                cred_for_predicate1['referent']: cred_for_predicate1}
+
+    print(Rajesh['creds_for_loan_application_proof'])
+
+    Rajesh['schemas_for_loan_application'], Rajesh['cred_defs_for_loan_application'], \
+    Rajesh['revoc_states_for_loan_application'] = \
+        await prover_get_entities_from_ledger(Rajesh['pool'], Rajesh['did'],
+                                              Rajesh['creds_for_loan_application_proof'], Rajesh['name'])
+
+    logger.info("\"Rajesh\" -> Create \"Loan-Application\" Proof")
+    Rajesh['loan_application_requested_creds'] = json.dumps({
+        'self_attested_attributes': {
+            'attr1_referent': 'Rajesh',
+            'attr2_referent': 'Kumar',
+            'attr3_referent': 'Pilot Training Programme',
+            'attr6_referent': 'Malancha Road, Kharagpur',
+            'attr8_referent': '2010'
+        },
+        'requested_attributes': {
+            'attr4_referent': {'cred_id': cred_for_attr4['referent'], 'revealed': True},
+            'attr5_referent': {'cred_id': cred_for_attr5['referent'], 'revealed': True},
+            'attr7_referent': {'cred_id': cred_for_attr7['referent'], 'revealed': True},
+        },
+        'requested_predicates': {'predicate1_referent': {'cred_id': cred_for_predicate1['referent']}}
+    })
+
+    Rajesh['loan_application_proof'] = \
+        await anoncreds.prover_create_proof(Rajesh['wallet'], Rajesh['loan_application_proof_request'],
+                                            Rajesh['loan_application_requested_creds'], Rajesh['master_secret_id'],
+                                            Rajesh['schemas_for_loan_application'],
+                                            Rajesh['cred_defs_for_loan_application'],
+                                            Rajesh['revoc_states_for_loan_application'])
+    print(Rajesh['loan_application_proof'])
+
+    logger.info("\"Rajesh\" -> Send \"Loan-Application\" Proof to cbdc")
+    cbdc['loan_application_proof'] = Rajesh['loan_application_proof']
+
+    # Validating the verifiable presentation
+    loan_application_proof_object = json.loads(cbdc['loan_application_proof'])
+
+    cbdc['schemas_for_loan_application'], cbdc['cred_defs_for_loan_application'], \
+    cbdc['revoc_ref_defs_for_loan_application'], cbdc['revoc_regs_for_loan_application'] = \
+        await verifier_get_entities_from_ledger(cbdc['pool'], cbdc['did'],
+                                                loan_application_proof_object['identifiers'], cbdc['name'])
+
+    logger.info("\"cbdc\" -> Verify \"Loan-Application\" Proof from Rajesh")
+    assert '2022' == \
+           loan_application_proof_object['requested_proof']['revealed_attrs']['attr4_referent']['raw']
+    assert '8' == \
+           loan_application_proof_object['requested_proof']['revealed_attrs']['attr5_referent']['raw']
+    assert '2000000' == \
+           loan_application_proof_object['requested_proof']['revealed_attrs']['attr7_referent']['raw']
+
+    assert 'Rajesh' == loan_application_proof_object['requested_proof']['self_attested_attrs']['attr1_referent']
+    assert 'Kumar' == loan_application_proof_object['requested_proof']['self_attested_attrs']['attr2_referent']
+    assert 'Pilot Training Programme' == loan_application_proof_object['requested_proof']['self_attested_attrs']['attr3_referent']
+    assert 'Malancha Road, Kharagpur' == loan_application_proof_object['requested_proof']['self_attested_attrs']['attr6_referent']
+    assert '2010' == loan_application_proof_object['requested_proof']['self_attested_attrs']['attr8_referent']
+
+    assert await anoncreds.verifier_verify_proof(cbdc['job_application_proof_request'], cbdc['loan_application_proof'],
+                                                 cbdc['schemas_for_loan_application'],
+                                                 cbdc['cred_defs_for_loan_application'],
+                                                 cbdc['revoc_ref_defs_for_loan_application'],
+                                                 cbdc['revoc_regs_for_loan_application'])
 
 
 loop = asyncio.get_event_loop()
