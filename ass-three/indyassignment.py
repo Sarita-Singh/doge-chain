@@ -41,13 +41,13 @@ def save_pool_genesis_txn_file(path):
 async def create_wallet(identity):
     logging.info("\"{}\" -> Create wallet".format(identity['name']))
     try:
-        await wallet.create_wallet(wallet_config("create", identity['wallet_config']),
-                                   wallet_credentials("create", identity['wallet_credentials']))
+        await wallet.create_wallet(identity['wallet_config'],
+                                   identity['wallet_credentials'])
     except IndyError as ex:
         if ex.error_code == ErrorCode.PoolLedgerConfigAlreadyExistsError:
             pass
-    identity['wallet'] = await wallet.open_wallet(wallet_config("open", identity['wallet_config']),
-                                                  wallet_credentials("open", identity['wallet_credentials']))
+    identity['wallet'] = await wallet.open_wallet(identity['wallet_config'],
+                                                  identity['wallet_credentials'])
 
 async def getting_verinym(from_, to):
     await create_wallet(to)
